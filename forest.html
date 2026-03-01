@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Опросник (Короткий)</title>
+    <title>Опросник (Лес)</title>
 <style>
     body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: 10px; color: #333; overflow-x: hidden; }
     h2 { margin-top: 0; color: #211e1e; border-bottom: 2px solid #3b3535; padding-bottom: 8px; font-size: 18px; text-transform: uppercase; margin-bottom: 15px; }
@@ -31,19 +31,23 @@
 
 	<div class="field-group">
 		<label>Позывной, дата и время прозвона:</label>
-		<div style="display: flex; height: 38px; overflow: hidden; border: 1px solid #ccc; border-radius: 4px;">
-			<input type="text" id="z_call" class="q-field-no-output" 
-				   placeholder="Позывной ДД.ММ.ГГГГ ЧЧ:ММ" 
-				   oninput="syncEverything()" 
-				   style="flex: 1; border: none; padding: 0 10px; height: 100%; outline: none; box-sizing: border-box;">
+		<div style="display: flex; height: 38px; overflow: hidden; border: 1px solid #ccc; border-radius: 4px; background: #fafafa;">
+			<input type="text" id="z_call_name" class="q-field q-field-no-output" 
+				   placeholder="Позывной" 
+				   style="flex: 1; border: none; padding: 0 10px; height: 100%; outline: none; background: transparent; border-right: 1px solid #eee;">
+			
+			<input type="text" id="z_call_date" class="q-field q-field-no-output" 
+				   placeholder="Дата и время" 
+				   style="flex: 1.5; border: none; padding: 0 10px; height: 100%; outline: none; background: transparent;">
 			
 			<button type="button" onclick="setCurrentTime()" title="Обновить время" 
 					style="width: 38px; height: 100%; background: #4caf50; color: white; border: none; 
 						   border-left: 1px solid #ccc; cursor: pointer; display: flex; 
-						   align-items: center; justify-content: center; transition: background 0.2s;">
-				<span style="font-size: 14px; margin-left: 2px;">▶</span>
+						   align-items: center; justify-content: center;">
+				<span style="font-size: 14px;">▶</span>
 			</button>
 		</div>
+		<input type="hidden" id="z_call" class="q-field">
 	</div>
 
         <div class="section-title">Общая часть:</div>
@@ -225,12 +229,37 @@
     var SOURCE_ID = 'forest'; 
     var currentGender = 'm';
     var lastSentIndex = -1; // Для предотвращения лишних сообщений при движении мыши
-    // lastSerializedData удален, так как он блокировал выдачу при инициализации
+
+    // ПЕРЕМЕННАЯ ДЛЯ ХРАНЕНИЯ ЧИСТОГО ПОЗЫВНОГО (без даты)
+    var currentCallsign = ""; 
 
     var genderDictionary = {
         'm': { '{a}': '', '{а}': '' , '{ла}': '', '{love}': 'девушка', '{ела}':'ел' },
         'f': { '{a}': 'а', '{а}': 'а' , '{ла}': 'ла', '{love}': 'парень', '{ела}':'ла' }
     };
+
+    // НОВАЯ ЛОГИКА: Склеивает части позывного и даты в основное поле z_call
+    function updateFullCallsign() {
+        var nameVal = document.getElementById('z_call_name').value.trim();
+        var dateVal = document.getElementById('z_call_date').value.trim();
+        var callEl = document.getElementById('z_call');
+        
+        if (callEl) {
+            // Формируем общую строку: "Позывной Дата" или просто что-то одно
+            callEl.value = (nameVal && dateVal) ? nameVal + " " + dateVal : (nameVal || dateVal);
+            
+            // Сразу синхронизируем с системой и сохраняем
+            window.parent.postMessage({ type: 'sync_globals', value: callEl.value }, '*');
+            localStorage.setItem('pso_global_callsign_data', callEl.value);
+        }
+    }
+
+    // НОВАЯ ЛОГИКА: Берем только первое слово из строки (ИСПРАВЛЕНО: теперь возвращает строку)
+    function extractFirstWord(text) {
+        if (!text) return "";
+        var trimmed = text.trim();
+        return trimmed.split(/\s+/); 
+    }
 
     function setGender(sex) {
         if (currentGender === sex) return; 
@@ -266,8 +295,21 @@
         if (event.data.type === 'set_global_data') {
             // Синхронизация позывного/времени
             var callEl = document.getElementById('z_call');
-            if (callEl && event.data.value !== undefined && callEl.value !== event.data.value) {
-                callEl.value = event.data.value;
+            var nameInp = document.getElementById('z_call_name');
+            var dateInp = document.getElementById('z_call_date');
+            
+            if (event.data.value !== undefined) {
+                var val = event.data.value.trim();
+                if (callEl) callEl.value = val;
+
+                // При получении данных извне — пытаемся разложить их по двум полям
+                var parts = val.split(/\s+/);
+                if (parts.length >= 2 && parts[parts.length-1].includes(':')) {
+                    dateInp.value = parts[parts.length-2] + " " + parts[parts.length-1];
+                    nameInp.value = parts.slice(0, parts.length-2).join(' ');
+                } else {
+                    nameInp.value = val;
+                }
             }
             
             if (event.data.fields) {
@@ -289,7 +331,10 @@
                         if (field.tagName === 'DIV') {
                             if (field.innerText !== newVal) field.innerText = newVal;
                         } else {
-                            if (field.value !== newVal) field.value = newVal;
+                            if (field.value !== newVal) {
+                                field.value = newVal;
+                                field.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
                         }
                     }
                 }
@@ -307,30 +352,34 @@
 
     var syncTimer;
     function syncEverything() {
+        // 1. Сначала склеиваем позывной и дату в скрытое поле z_call
+        updateFullCallsign();
+
         clearTimeout(syncTimer);
         syncTimer = setTimeout(function() {
-            var callEl = document.getElementById('z_call');
-            var fullCall = callEl ? callEl.value : "";
-            
-            // Сначала обновляем глобальный позывной в родителе
-            window.parent.postMessage({ type: 'sync_globals', value: fullCall }, '*');
-
             var payload = []; 
             var fields = document.querySelectorAll('.q-field');
             
             fields.forEach(function(el) {
-                var val = (el.tagName === 'DIV' ? el.innerText : el.value).trim();
-                // Не выводим позывной в список (он в шапке) и пустые поля
-                if (val !== "" && !el.classList.contains('q-field-no-output') && el.id !== 'z_call') {
-                    var rawPrefix = el.getAttribute('data-p') || "";
-                    var prefix = applyGender(rawPrefix);
-                    var label = prefix.replace(':', '').trim(); 
-                    payload.push({ label: label, value: val });
-                }
-            });
+		// Игнорируем запчасти
+		if (el.id === 'z_call_name' || el.id === 'z_call_date' || el.classList.contains('q-field-no-output')) {
+			return; 
+		}
 
-            // Отправляем данные всегда при вызове этой функции без лишних проверок,
-            // чтобы избежать "пустого поля" в индексе из-за ошибок инициализации.
+		var val = (el.tagName === 'DIV' ? el.innerText : el.value).trim();
+		
+		if (val !== "") {
+			if (el.id === 'z_call') {
+				// Добавляем флаг isHeader, чтобы индекс узнал позывной "в лицо"
+				payload.push({ label: "", value: val, isHeader: true });
+			} else {
+				var rawPrefix = el.getAttribute('data-p') || "";
+				var label = applyGender(rawPrefix).replace(':', '').trim(); 
+				payload.push({ label: label, value: val });
+			}
+		}
+	});
+
             window.parent.postMessage({ 
                 type: 'survey_update', 
                 source: SOURCE_ID, 
@@ -422,29 +471,19 @@
         window.parent.postMessage({ type: 'set_height', height: height }, '*');
     }
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ: не стирает позывной
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ: Теперь обновляет только поле даты
     function setCurrentTime() {
-        const el = document.getElementById('z_call');
-        if (!el) return;
+        const dateInp = document.getElementById('z_call_date');
+        if (!dateInp) return;
 
         const now = new Date();
         const dateStr = now.toLocaleDateString('ru-RU');
         const timeStr = now.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
-        const newDateTime = dateStr + " " + timeStr;
-
-        let val = el.value || "";
-        const dateTimePattern = /\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2}/;
         
-        // Если время в поле уже есть, мы его не переписываем текущим!
-        if (dateTimePattern.test(val)) return;
+        // Пишем время именно в поле даты
+        dateInp.value = dateStr + " " + timeStr;
 
-        let callsign = val.replace(dateTimePattern, '').trim();
-        el.value = (callsign.length > 0 ? callsign + " " : "") + newDateTime;
-
-        localStorage.setItem('pso_global_callsign_data', el.value);
-        window.parent.postMessage({ type: 'sync_globals', value: el.value }, '*');
-
-        saveLocal();
+        // Обновляем склейку и отчет
         syncEverything();
     }
 
@@ -452,7 +491,7 @@
         var outputIndex = 0;
         document.querySelectorAll('.q-field:not(.q-field-no-output)').forEach(function(el) {
             var val = (el.tagName === 'DIV' ? el.innerText : el.value).trim();
-            if (val !== "" && el.id !== 'z_call') {
+            if (val !== "" && el.id !== 'z_call_name' && el.id !== 'z_call_date') {
                 el.setAttribute('data-index', outputIndex);
                 outputIndex++;
             } else {
@@ -473,24 +512,32 @@
     });
 
     window.onload = function() {
-        // 1. Сначала загружаем локальные данные (в том числе из импортированного файла)
         loadLocal(); 
         updateLabelsOnPage(); 
         
-        // 2. Проверяем позывной в глобальном хранилище
+        var nameInp = document.getElementById('z_call_name');
+        var dateInp = document.getElementById('z_call_date');
         var globalCall = localStorage.getItem('pso_global_callsign_data');
-        var callEl = document.getElementById('z_call');
         
-        if (callEl) {
-            // Если в localStorage УЖЕ что-то есть (например, из загруженного файла)
-            if (globalCall && globalCall.trim() !== "") {
-                callEl.value = globalCall;
-            } 
-            // И ТОЛЬКО ЕСЛИ ТАМ ПУСТО — ставим текущее время
-            else if (!callEl.value || callEl.value.trim() === "") {
-                setCurrentTime();
+        if (globalCall) {
+            // Пытаемся разложить сохраненную строку
+            var parts = globalCall.trim().split(/\s+/);
+            if (parts.length >= 2 && parts[parts.length-1].includes(':')) {
+                dateInp.value = parts[parts.length-2] + " " + parts[parts.length-1];
+                nameInp.value = parts.slice(0, parts.length-2).join(' ');
+            } else {
+                nameInp.value = globalCall;
             }
         }
+
+        // Если дата так и не появилась — ставим текущую
+        if (!dateInp.value) {
+            setCurrentTime();
+        }
+
+        // Слушаем изменения в обоих полях
+        nameInp.addEventListener('input', syncEverything);
+        dateInp.addEventListener('input', syncEverything);
 
         syncEverything();
         setTimeout(function() {

@@ -133,7 +133,7 @@
     var ORDER = ['short', 'elderly', 'teens', 'forest', 'adults']; 
     // globalZData — основной текст заявки
     var globalZData = localStorage.getItem('pso_z_main') || "";
-    // globalCallsignData — "Позывной / Дата / Время" (идет в выдачу)
+    // globalCallsignData — "Позывной / Дата / Время" (используется для системных нужд, например, имени файла)
     var globalCallsignData = localStorage.getItem('pso_global_callsign_data') || ""; 
     var globalFields = JSON.parse(localStorage.getItem('pso_global_fields') || "{}"); 
     
@@ -228,52 +228,49 @@
         }
     }
 
-    function updateFinalOutput() {
-        var outDiv = document.getElementById('output');
-        if (!outDiv) return;
-        outDiv.innerHTML = ""; 
+    // ИСПРАВЛЕНО: Теперь индекс НЕ добавляет позывной сам, 
+    // он только отображает то, что прислал опросник в payload
+		function updateFinalOutput() {
+		var outDiv = document.getElementById('output');
+		if (!outDiv) return;
+		outDiv.innerHTML = ""; 
 
-        // 1. В ВЫДАЧУ ИДЕТ ТОЛЬКО ПОЗЫВНОЙ/ДАТА
-        var currentCall = globalCallsignData || "";
-
-        if (currentCall.trim() !== "") {
-            var callDiv = document.createElement('div');
-            callDiv.style.fontWeight = "bold";
-            callDiv.style.marginBottom = "20px";
-            callDiv.style.whiteSpace = "pre-wrap"; 
-            callDiv.innerText = currentCall;
-            outDiv.appendChild(callDiv);
-        }
-
-        // 2. Данные анкеты
-        var raw = localStorage.getItem('survey_text_' + currentSource);
-        if (raw) {
-            try {
-                var payload = JSON.parse(raw);
-                if (Array.isArray(payload)) {
-                    payload.forEach(function(item, index) {
-                        var row = document.createElement('div');
-                        row.className = 'res-row';
-                        row.id = 'row-' + currentSource + '-' + index;
-                        if (item.label && item.label.trim() !== "") {
-                            row.innerHTML = '<span class="res-label">' + item.label + ':</span> <span class="res-value">' + item.value + '</span>';
-                        } else {
-                            row.innerHTML = '<span class="res-value">' + item.value + '</span>';
-                        }
-                        outDiv.appendChild(row);
-                    });
-                }
-            } catch(e) { console.error("Ошибка отрисовки", e); }
-        }
-
-        if (outDiv.innerHTML === "") outDiv.innerText = "Результат опроса [" + currentSource + "] появится здесь...";
-
-        var status = document.getElementById('save-status');
-        if (status) {
-            var timeStrStatus = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-            status.innerText = "Обновлено " + timeStrStatus;
-        }
-    }
+		var raw = localStorage.getItem('survey_text_' + currentSource);
+		if (raw) {
+			try {
+				var payload = JSON.parse(raw);
+				if (Array.isArray(payload)) {
+					payload.forEach(function(item, index) {
+						var row = document.createElement('div');
+						row.className = 'res-row';
+						row.id = 'row-' + currentSource + '-' + index;
+						
+						// ПРОВЕРКА: Если это помечено как заголовок (Позывной)
+						if (item.isHeader) {
+							row.innerHTML = '<span class="res-value" style="font-weight:bold; display:block; margin-bottom:15px; font-size:1.1em; border-bottom:1px solid #444; padding-bottom:5px;">' + item.value + '</span>';
+						} 
+						// Если есть лейбл
+						else if (item.label && item.label.trim() !== "") {
+							row.innerHTML = '<span class="res-label">' + item.label + ':</span> <span class="res-value">' + item.value + '</span>';
+						} 
+						// Просто текст без лейбла (не заголовок)
+						else {
+							row.innerHTML = '<span class="res-value">' + item.value + '</span>';
+						}
+						
+						outDiv.appendChild(row);
+					});
+				}
+			} catch(e) { console.error("Ошибка отрисовки", e); }
+		}
+		// Обновляем время на кнопке или в статус-баре
+		var status = document.getElementById('save-status');
+		if (status) {
+			var now = new Date();
+			var timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+			status.innerText = "Обновлено в " + timeStr;
+		}
+	}
 
     window.addEventListener('message', function(event) {
         if (event.data.type === 'survey_update') {
@@ -301,8 +298,7 @@
                 globalCallsignData = event.data.value;
                 localStorage.setItem('pso_global_callsign_data', globalCallsignData);
                 
-                // ОБЯЗАТЕЛЬНО: Обновляем только выдачу (текст справа)
-                // НО НЕ шлем broadcastData обратно в iframe, иначе он затрет ввод!
+                // Обновляем выдачу, так как payload тоже изменился
                 updateFinalOutput(); 
             }
         }
@@ -325,67 +321,53 @@
     });
 
     function copyText() {
-    var out = document.getElementById('output');
-    if (!out || out.innerText.indexOf('Результат опроса') === 0) return;
+        var out = document.getElementById('output');
+        if (!out || out.innerText.indexOf('Результат опроса') === 0) return;
 
-    var finalString = "";
-    
-    // Перебираем все элементы внутри output
-    var elements = out.childNodes;
-    elements.forEach(function(node) {
-        // Если это div с данными анкеты или позывным
-        if (node.nodeType === 1) { 
-            // Клонируем узел, чтобы не испортить отображение на экране
-            var tempNode = node.cloneNode(true);
-            
-            // Если внутри есть label (префикс), убираем у него капс стиля
-            var labels = tempNode.querySelectorAll('.res-label');
-            labels.forEach(function(l) {
-                l.style.textTransform = 'none';
-            });
+        var finalString = "";
+        var elements = out.childNodes;
+        elements.forEach(function(node) {
+            if (node.nodeType === 1) { 
+                var tempNode = node.cloneNode(true);
+                var labels = tempNode.querySelectorAll('.res-label');
+                labels.forEach(function(l) {
+                    l.style.textTransform = 'none';
+                });
+                finalString += tempNode.innerText.trim() + "\n";
+            }
+        });
 
-            // Добавляем текст этого узла и принудительный перенос строки
-            finalString += tempNode.innerText.trim() + "\n";
+        var tempArea = document.createElement('textarea');
+        tempArea.value = finalString.trim();
+        document.body.appendChild(tempArea);
+        tempArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempArea);
+
+        var btn = document.getElementById('copy-btn');
+        if (btn) {
+            var oldContent = btn.innerHTML;
+            btn.innerHTML = "<span>СКОПИРОВАНО!</span>";
+            btn.style.backgroundColor = "#00c853";
+            setTimeout(function() { 
+                btn.innerHTML = oldContent; 
+                btn.style.backgroundColor = "#1976d2"; 
+            }, 1200);
         }
-    });
-
-    // Копируем полученную строку
-    var tempArea = document.createElement('textarea');
-    tempArea.value = finalString.trim(); // trim уберет лишний перенос в самом конце
-    document.body.appendChild(tempArea);
-    tempArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempArea);
-
-    // Анимация кнопки
-    var btn = document.getElementById('copy-btn');
-    if (btn) {
-        var oldContent = btn.innerHTML;
-        btn.innerHTML = "<span>СКОПИРОВАНО!</span>";
-        btn.style.backgroundColor = "#00c853";
-        setTimeout(function() { 
-            btn.innerHTML = oldContent; 
-            btn.style.backgroundColor = "#1976d2"; 
-        }, 1200);
     }
-}
 
     window.onload = function() {
-        // 1. ЗАЯВКА: Если пустая — открываем для ввода сразу
         var savedZ = localStorage.getItem('pso_z_main') || "";
         globalZData = savedZ;
         document.getElementById('z_text').value = savedZ;
         
         if (savedZ.trim() === "") {
-            editZ(); // Поле активно сразу
+            editZ(); 
         } else {
-            renderZ(savedZ); // Показываем текст, если он уже есть
+            renderZ(savedZ); 
         }
 
-        // 2. ПОЗЫВНОЙ/ДАТА: предзаполняем системно ТОЛЬКО если в localStorage совсем пусто
         var savedCall = localStorage.getItem('pso_global_callsign_data');
-        
-        // Если данных НЕТ вообще (даже пустой строки), только тогда генерируем время
         if (savedCall === null) { 
             var now = new Date();
             var dateStr = now.toLocaleDateString('ru-RU');
@@ -411,55 +393,46 @@
 
     window.addEventListener('resize', adjustFrameOffset);
     
-	function exportToJson() {
-    try {
-        var backup = {};
-        // Собираем данные
-        var keys = Object.keys(localStorage);
-        for (var i = 0; i < keys.length; i++) {
-            var k = keys[i];
-            if (k && (k.indexOf('survey_') === 0 || k.indexOf('pso_') === 0 || k === 'last_survey_file' || k === 'pso_last_gender')) {
-                backup[k] = localStorage.getItem(k);
+    function exportToJson() {
+        try {
+            var backup = {};
+            var keys = Object.keys(localStorage);
+            for (var i = 0; i < keys.length; i++) {
+                var k = keys[i];
+                if (k && (k.indexOf('survey_') === 0 || k.indexOf('pso_') === 0 || k === 'last_survey_file' || k === 'pso_last_gender')) {
+                    backup[k] = localStorage.getItem(k);
+                }
             }
+
+            var callsign = localStorage.getItem('pso_global_callsign_data');
+            var rawString = String(callsign || "pso_backup");
+            var firstLine = String(rawString.split('\n'));
+            var safeName = firstLine.trim()
+                .replace(/[:.\/\\?%*|"<>]/g, '-') 
+                .replace(/\s+/g, '_');
+
+            if (!safeName) safeName = "pso_backup";
+
+            var dataStr = JSON.stringify(backup, null, 2);
+            var blob = new Blob([dataStr], {type: "application/json"});
+            var url = URL.createObjectURL(blob);
+            
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = safeName + ".json";
+            
+            document.body.appendChild(link);
+            link.click();
+            
+            setTimeout(function() {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+
+        } catch (e) {
+            alert("Ошибка при сохранении: " + e.message);
         }
-
-        // --- УЛЬТРА-БЕЗОПАСНОЕ ИМЯ ---
-        var callsign = localStorage.getItem('pso_global_callsign_data');
-        
-        // 1. Превращаем в строку, что бы там ни лежало
-        var rawString = String(callsign || "pso_backup");
-        
-        // 2. Берем первую строку и СРАЗУ делаем её строкой еще раз для гарантии
-        var firstLine = String(rawString.split('\n'));
-        
-        // 3. Теперь чистим. trim() теперь точно сработает.
-        var safeName = firstLine.trim()
-            .replace(/[:.\/\\?%*|"<>]/g, '-') 
-            .replace(/\s+/g, '_');
-
-        if (!safeName) safeName = "pso_backup";
-
-        // --- СОХРАНЕНИЕ ---
-        var dataStr = JSON.stringify(backup, null, 2);
-        var blob = new Blob([dataStr], {type: "application/json"});
-        var url = URL.createObjectURL(blob);
-        
-        var link = document.createElement('a');
-        link.href = url;
-        link.download = safeName + ".json";
-        
-        document.body.appendChild(link);
-        link.click();
-        
-        setTimeout(function() {
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        }, 100);
-
-    } catch (e) {
-        alert("Ошибка при сохранении: " + e.message);
     }
-}
 
     function importFromJson(el) {
         if (!el || !el.files || el.files.length === 0) return;
