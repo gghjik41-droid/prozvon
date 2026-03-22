@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Опросники</title>
 
     <link rel="icon" type="image/png" href="favicon.png">
@@ -19,34 +19,24 @@
 
     <style>
         /* ОСНОВНОЙ ВИЗУАЛ */
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; padding-top: env(safe-area-inset-top); background-color: #eceff1; min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; padding-top: env(safe-area-inset-top, 0px); background-color: #eceff1; min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            padding-top: env(safe-area-inset-top, 0px); 
+            background-color: #eceff1; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            touch-action: manipulation; 
+        }
 
         /* ШАПКА И НАВИГАЦИЯ */
         .header-nav { 
-    background-color: #37474f; 
-    /* Добавляем безопасный отступ сверху для iPhone, на Windows будет 0 */
-    padding: calc(4px + env(safe-area-inset-top, 0px)) 8px 4px 8px; 
-    display: grid; 
-    grid-template-columns: 1fr auto 1fr; 
-    align-items: center; 
-    gap: 10px; 
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3); 
-    z-index: 1000; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    right: 0; 
-    /* Убираем жесткие 40px и даем шапке расти вместе с отступом */
-    height: auto;
-    min-height: 40px; 
-    overflow-x: auto; 
-    white-space: nowrap; 
-    scrollbar-width: none; 
-}
-		.header-nav::-webkit-scrollbar { display: none; }
             background-color: #37474f; 
-            /* ПРАВКА 1: Отступ сверху для кнопок меню */
+            /* Добавляем безопасный отступ сверху для iPhone, на Windows будет 0 */
             padding: calc(4px + env(safe-area-inset-top, 0px)) 8px 4px 8px; 
             display: grid; 
             grid-template-columns: 1fr auto 1fr; 
@@ -58,7 +48,7 @@
             top: 0; 
             left: 0; 
             right: 0; 
-            /* ПРАВКА 2: Авто-высота, чтобы кнопки не сплющились */
+            /* Убираем жесткие 40px и даем шапке расти вместе с отступом */
             height: auto;
             min-height: 40px; 
             overflow-x: auto; 
@@ -75,7 +65,6 @@
         .nav-btn.active { background-color: #00c853; color: #fff; }
 
         /* КОНТЕЙНЕРЫ */
-
         .main-wrapper { 
             display: flex; 
             width: 100%; 
@@ -86,22 +75,27 @@
             gap: 10px; 
             box-sizing: border-box; 
             align-items: flex-start;
-			}
-			
+        }
+            
         .form-side { 
-			flex: 0 0 55%; 
-			background: white; 
-			border-radius: 4px; 
-			box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
-			padding: 5px; 
-			box-sizing: border-box; 
-			position: relative; 
-		}
-		
-        .result-side { flex: 0 0 45%; display: flex; flex-direction: column; gap: 8px; position: relative; }
+            flex: 0 0 55%; 
+            background: white; 
+            border-radius: 4px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
+            padding: 5px; 
+            box-sizing: border-box; 
+            position: relative; 
+        }
+        
+        .result-side { 
+            flex: 0 0 45%; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            position: relative; 
+        }
 
         /* ЛИПКАЯ ЗАЯВКА */
-      
         .sticky-header { 
             background: white; 
             padding: 3px 5px; 
@@ -125,7 +119,6 @@
         #survey-frame { width: 100%; height: auto; min-height: 300px; border: none; display: block; overflow: hidden !important; margin-top: 140px; }
 
         /* ВЫДАЧА РЕЗУЛЬТАТА */
-        .btn-copy { background-color: #1976d2; color: white; border: none; padding: 12px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; position: fixed; top: 53px; right: 10px; width: calc(45% - 10px); z-index: 1001; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; }
         .btn-copy { 
             background-color: #1976d2; 
             color: white; 
@@ -150,8 +143,6 @@
         #output { 
             width: calc(45% - 10px); 
             position: fixed;
-            top: 105px; 
-            /* ПРАВКА 6: Опускаем окно результата */
             top: calc(105px + env(safe-area-inset-top, 0px)); 
             right: 10px;
             bottom: 10px; 
@@ -185,59 +176,57 @@
         }
 
         @media (max-width: 900px) { 
-    /* 1. Убираем боковые отступы у главного обертки */
-    .main-wrapper { 
-        flex-direction: column; 
-        padding: 3; /* Было padding-right: 5px */
-		padding-right: 3px
-        margin-top: calc(50px + env(safe-area-inset-top, 0px)); 
-    } 
+            /* 1. Убираем боковые отступы у главного обертки */
+            .main-wrapper { 
+                flex-direction: column; 
+                padding: 3px; 
+                margin-top: calc(50px + env(safe-area-inset-top, 0px)); 
+            } 
 
-    /* 2. Убираем внутренний отступ у контейнера формы (те самые 12px) */
-    .form-side { 
-        padding: 4px !important; /* Оставляем минимум, чтобы рамки полей не терлись об экран */
-        flex: 0 0 100%; 
-        width: 100%; 
-        position: static; 
-        box-shadow: none; /* На мобилке тени по бокам обычно только мешают */
-    }
+            /* 2. Убираем внутренний отступ у контейнера формы */
+            .form-side { 
+                padding: 4px !important; 
+                flex: 0 0 100%; 
+                width: 100%; 
+                position: static; 
+                box-shadow: none; 
+            }
 
-    .result-side { 
-        flex: 0 0 100%; 
-        width: 100%; 
-        position: static; 
-        padding: 4px; 
-    } 
+            .result-side { 
+                flex: 0 0 100%; 
+                width: 100%; 
+                position: static; 
+                padding: 4px; 
+            } 
 
-    /* 3. Заявка и кнопка копирования */
-    .sticky-header { 
-        position: static !important; 
-        width: 100% !important; 
-        padding: 0 0 8px 0; /* Убираем боковые padding здесь */
-    } 
+            /* 3. Заявка и кнопка копирования */
+            .sticky-header { 
+                position: static !important; 
+                width: 100% !important; 
+                padding: 0 0 8px 0; 
+            } 
 
-    #survey-frame { margin-top: 0 !important; } 
+            #survey-frame { margin-top: 0 !important; } 
 
-    .btn-copy { 
-        position: static; 
-        width: 100%; 
-        margin-bottom: 8px; 
-        box-sizing: border-box; /* Чтобы padding не раздувал кнопку */
-    } 
+            .btn-copy { 
+                position: static; 
+                width: 100%; 
+                margin-bottom: 8px; 
+                box-sizing: border-box; 
+            } 
 
-    #output { 
-        position: static; 
-        width: 100%; 
-        margin-top: 0; 
-        transform: none !important; 
-        max-height: none; 
-    }
+            #output { 
+                position: static; 
+                width: 100%; 
+                margin-top: 0; 
+                transform: none !important; 
+                max-height: none; 
+            }
 
-    /* 4. Скрываем пин, как договорились */
-    #master-pin-btn { display: none !important; }
-}
+            /* 4. Скрываем пин, как договорились */
+            #master-pin-btn { display: none !important; }
+        }
     </style>
-	
 </head>
 <body>
 
@@ -273,7 +262,7 @@
             <div id="z_fixed"><div id="z_value"></div></div>
             <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
         </div>
-        <iframe src="short.html?v=13" id="survey-frame" scrolling="no"></iframe>
+        <iframe src="short.html?v=14" id="survey-frame" scrolling="no"></iframe>
     </div>
 
     <div class="result-side">
@@ -286,19 +275,26 @@
 </div>
 
 <script>
+    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
     var ORDER = ['short', 'elderly', 'teens', 'forest', 'adults']; 
-    // globalZData — основной текст заявки
+    // Загружаем данные из памяти браузера (localStorage) или ставим пустые значения
     var globalZData = localStorage.getItem('pso_z_main') || "";
-    // globalCallsignData — "Позывной / Дата / Время" (используется для системных нужд, например, имени файла)
     var globalCallsignData = localStorage.getItem('pso_global_callsign_data') || ""; 
     var globalFields = JSON.parse(localStorage.getItem('pso_global_fields') || "{}"); 
 
+    // Определяем текущий активный опросник (последний открытый или 'short' по умолчанию)
     var currentSource = localStorage.getItem('last_survey_file') ? localStorage.getItem('last_survey_file').replace('.html', '') : 'short';
     var scrollTimeout;
 
+    /**
+     * Подстраивает верхний отступ фрейма (анкеты).
+     * Если шапка закреплена (pinned), фрейм опускается вниз на высоту шапки,
+     * чтобы текст не заезжал под неё.
+     */
     function adjustFrameOffset() {
         var header = document.getElementById('master-sticky');
         var frame = document.getElementById('survey-frame');
+        // Если шапка есть, она НЕ откреплена (нет класса unpinned) и ширина экрана > 900px
         if (header && frame && !header.classList.contains('unpinned') && window.innerWidth > 900) {
             frame.style.marginTop = (header.offsetHeight + 10) + 'px';
         } else {
@@ -306,26 +302,41 @@
         }
     }
 
+    /**
+     * Переключает состояние закрепления шапки (Pin).
+     * Сохраняет выбор пользователя в localStorage.
+     */
     function togglePin() {
         var btn = document.getElementById('master-pin-btn');
         var header = document.getElementById('master-sticky');
         if (!btn || !header) return;
+        
+        // Переключаем классы
         var isActive = btn.classList.toggle('active');
         header.classList.toggle('unpinned', !isActive);
+        
+        // СОХРАНЯЕМ: записываем в память true (закреплено) или false (откреплено)
+        localStorage.setItem('pso_header_pinned', isActive);
+        
         adjustFrameOffset();
     }
 
-    // ЛОГИКА БЛОКА ЗАЯВКА
+    /**
+     * Применяет изменения в поле "Z" (ввод основной инфы по заявке).
+     * Скрывает текстовое поле и отображает отрендеренный текст.
+     */
     function fixZ() {
         var val = document.getElementById('z_text').value; 
         globalZData = val;
         localStorage.setItem('pso_z_main', val);
-
         if (val.trim() !== "") {
             renderZ(val);
         }
     }
 
+    /**
+     * Превращает обычный текст из textarea в красивые строки <span> внутри блока предпросмотра.
+     */
     function renderZ(text) {
         var valDiv = document.getElementById('z_value');
         if (!valDiv) return;
@@ -333,9 +344,10 @@
         var lines = text.split('\n');
         lines.forEach(function(line) {
             var span = document.createElement('span');
-            span.innerText = line || ' ';
+            span.innerText = line || ' '; // Сохраняем пустые строки для переноса
             valDiv.appendChild(span);
         });
+        // Переключаем видимость кнопок и полей
         document.getElementById('z_text').style.display = 'none';
         document.getElementById('z_confirm_btn').style.display = 'none';
         document.getElementById('z_fixed').style.display = 'block';
@@ -343,6 +355,9 @@
         setTimeout(adjustFrameOffset, 30);
     }
 
+    /**
+     * Возвращает блок "Z" в режим редактирования (показывает textarea).
+     */
     function editZ() {
         var zInput = document.getElementById('z_text');
         zInput.value = globalZData;
@@ -353,6 +368,9 @@
         setTimeout(adjustFrameOffset, 30);
     }
 
+    /**
+     * Передает данные внутрь <iframe> (анкеты) с помощью postMessage.
+     */
     function broadcastData(call, fields) {
         var frame = document.getElementById('survey-frame');
         if (frame && frame.contentWindow) {
@@ -360,6 +378,9 @@
         }
     }
 
+    /**
+     * Переключает анкеты (вкладки). Меняет src у iframe и обновляет активную кнопку.
+     */
     function openSurvey(fileName, btn) {
         var frame = document.getElementById('survey-frame');
         if (!frame) return;
@@ -377,6 +398,9 @@
         };
     }
 
+    /**
+     * Полная очистка всей памяти и перезагрузка страницы (Красный крест).
+     */
     function clearAllData() {
         if (confirm("Очистить все формы и результат?")) {
             localStorage.clear();
@@ -384,56 +408,60 @@
         }
     }
 
-    // ИСПРАВЛЕНО: Теперь индекс НЕ добавляет позывной сам, 
-    // он только отображает то, что прислал опросник в payload
-		function updateFinalOutput() {
-		var outDiv = document.getElementById('output');
-		if (!outDiv) return;
-		outDiv.innerHTML = ""; 
+    /**
+     * Обновляет итоговый текстовый блок справа.
+     * Берет данные из localStorage и превращает их в строки с метками.
+     */
+    function updateFinalOutput() {
+        var outDiv = document.getElementById('output');
+        if (!outDiv) return;
+        outDiv.innerHTML = ""; 
 
-		var raw = localStorage.getItem('survey_text_' + currentSource);
-		if (raw) {
-			try {
-				var payload = JSON.parse(raw);
-				if (Array.isArray(payload)) {
-					payload.forEach(function(item, index) {
-						var row = document.createElement('div');
-						row.className = 'res-row';
-						row.id = 'row-' + currentSource + '-' + index;
+        var raw = localStorage.getItem('survey_text_' + currentSource);
+        if (raw) {
+            try {
+                var payload = JSON.parse(raw);
+                if (Array.isArray(payload)) {
+                    payload.forEach(function(item, index) {
+                        var row = document.createElement('div');
+                        row.className = 'res-row';
+                        row.id = 'row-' + currentSource + '-' + index;
 
-						// ПРОВЕРКА: Если это помечено как заголовок (Позывной)
-						if (item.isHeader) {
-							row.innerHTML = '<span class="res-value" style="font-weight:bold; display:block; margin-bottom:15px; font-size:1.1em; border-bottom:1px solid #444; padding-bottom:5px;">' + item.value + '</span>';
-						} 
-						// Если есть лейбл
-						else if (item.label && item.label.trim() !== "") {
-							row.innerHTML = '<span class="res-label">' + item.label + ':</span> <span class="res-value">' + item.value + '</span>';
-						} 
-						// Просто текст без лейбла (не заголовок)
-						else {
-							row.innerHTML = '<span class="res-value">' + item.value + '</span>';
-						}
+                        if (item.isHeader) {
+                            row.innerHTML = '<span class="res-value" style="font-weight:bold; display:block; margin-bottom:15px; font-size:1.1em; border-bottom:1px solid #444; padding-bottom:5px;">' + item.value + '</span>';
+                        } 
+                        else if (item.label && item.label.trim() !== "") {
+                            row.innerHTML = '<span class="res-label">' + item.label + ':</span> <span class="res-value">' + item.value + '</span>';
+                        } 
+                        else {
+                            row.innerHTML = '<span class="res-value">' + item.value + '</span>';
+                        }
+                        outDiv.appendChild(row);
+                    });
+                }
+            } catch(e) { console.error("Ошибка отрисовки", e); }
+        }
+        // Обновляем метку времени последнего изменения
+        var status = document.getElementById('save-status');
+        if (status) {
+            var now = new Date();
+            var timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            status.innerText = "Обновлено в " + timeStr;
+        }
+    }
 
-						outDiv.appendChild(row);
-					});
-				}
-			} catch(e) { console.error("Ошибка отрисовки", e); }
-		}
-		// Обновляем время на кнопке или в статус-баре
-		var status = document.getElementById('save-status');
-		if (status) {
-			var now = new Date();
-			var timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-			status.innerText = "Обновлено в " + timeStr;
-		}
-	}
-
+    /**
+     * Слушатель событий от iFrame.
+     * Обрабатывает: обновление данных анкеты, синхронизацию прокрутки, глобальные поля и высоту.
+     */
     window.addEventListener('message', function(event) {
+        // Обновление текста анкеты
         if (event.data.type === 'survey_update') {
             localStorage.setItem('survey_text_' + event.data.source, JSON.stringify(event.data.payload));
             if (event.data.source === currentSource) updateFinalOutput();
         }
 
+        // Подсветка и скролл к нужной строке в итоговом результате при вводе во фрейме
         if (event.data.type === 'sync_scroll') {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(function() {
@@ -449,16 +477,16 @@
             }, 100);
         }
 
+        // Синхронизация позывного/даты
         if (event.data.type === 'sync_globals') {
             if (globalCallsignData !== event.data.value) {
                 globalCallsignData = event.data.value;
                 localStorage.setItem('pso_global_callsign_data', globalCallsignData);
-
-                // Обновляем выдачу, так как payload тоже изменился
                 updateFinalOutput(); 
             }
         }
 
+        // Синхронизация отдельных полей (например, ФИО или Пол) между разными анкетами
         if (event.data.type === 'sync_field') {
             if (globalFields[event.data.fieldId] !== event.data.value) {
                 globalFields[event.data.fieldId] = event.data.value;
@@ -467,6 +495,7 @@
             }
         }
 
+        // Авто-высота фрейма, чтобы не было двойного скролла
         if (event.data.type === 'set_height') {
             var frame = document.getElementById('survey-frame');
             if (frame && event.data.height) {
@@ -476,6 +505,9 @@
         }
     });
 
+    /**
+     * Копирует итоговый результат в буфер обмена.
+     */
     function copyText() {
         var out = document.getElementById('output');
         if (!out || out.innerText.indexOf('Результат опроса') === 0) return;
@@ -486,9 +518,7 @@
             if (node.nodeType === 1) { 
                 var tempNode = node.cloneNode(true);
                 var labels = tempNode.querySelectorAll('.res-label');
-                labels.forEach(function(l) {
-                    l.style.textTransform = 'none';
-                });
+                labels.forEach(function(l) { l.style.textTransform = 'none'; });
                 finalString += tempNode.innerText.trim() + "\n";
             }
         });
@@ -500,6 +530,7 @@
         document.execCommand('copy');
         document.body.removeChild(tempArea);
 
+        // Индикация успешного копирования на кнопке
         var btn = document.getElementById('copy-btn');
         if (btn) {
             var oldContent = btn.innerHTML;
@@ -512,17 +543,28 @@
         }
     }
 
+    /**
+     * Основная инициализация при загрузке страницы.
+     */
     window.onload = function() {
+        // 1. Восстанавливаем блок Z
         var savedZ = localStorage.getItem('pso_z_main') || "";
         globalZData = savedZ;
         document.getElementById('z_text').value = savedZ;
+        if (savedZ.trim() === "") { editZ(); } else { renderZ(savedZ); }
 
-        if (savedZ.trim() === "") {
-            editZ(); 
-        } else {
-            renderZ(savedZ); 
+        // 2. Восстанавливаем состояние Пина (закрепление шапки)
+        var pinnedSetting = localStorage.getItem('pso_header_pinned');
+        var pinBtn = document.getElementById('master-pin-btn');
+        var stickyHeader = document.getElementById('master-sticky');
+
+        if (pinnedSetting !== null && pinBtn && stickyHeader) {
+            var isPinned = (pinnedSetting === 'true');
+            pinBtn.classList.toggle('active', isPinned);
+            stickyHeader.classList.toggle('unpinned', !isPinned);
         }
 
+        // 3. Восстанавливаем позывной или создаем дату/время по умолчанию
         var savedCall = localStorage.getItem('pso_global_callsign_data');
         if (savedCall === null) { 
             var now = new Date();
@@ -533,6 +575,7 @@
         }
         globalCallsignData = savedCall;
 
+        // 4. Открываем последнюю использованную анкету
         var lastFile = localStorage.getItem('last_survey_file') || 'short.html';
         var buttons = document.querySelectorAll('.nav-btn');
         var found = false;
@@ -545,10 +588,14 @@
         if(!found && buttons.length > 0) openSurvey('short.html', buttons);
 
         updateFinalOutput();
+        setTimeout(adjustFrameOffset, 150);
     };
 
     window.addEventListener('resize', adjustFrameOffset);
 
+    /**
+     * Экспорт всех данных в JSON файл для бэкапа.
+     */
     function exportToJson() {
         try {
             var backup = {};
@@ -562,34 +609,26 @@
 
             var callsign = localStorage.getItem('pso_global_callsign_data');
             var rawString = String(callsign || "pso_backup");
-            var firstLine = String(rawString.split('\n'));
-            var safeName = firstLine.trim()
-                .replace(/[:.\/\\?%*|"<>]/g, '-') 
-                .replace(/\s+/g, '_');
+            var firstLine = String(rawString.split('\n')[0]);
+            var safeName = firstLine.trim().replace(/[:.\/\\?%*|"<>]/g, '-').replace(/\s+/g, '_');
 
             if (!safeName) safeName = "pso_backup";
 
             var dataStr = JSON.stringify(backup, null, 2);
             var blob = new Blob([dataStr], {type: "application/json"});
             var url = URL.createObjectURL(blob);
-
             var link = document.createElement('a');
             link.href = url;
             link.download = safeName + ".json";
-
             document.body.appendChild(link);
             link.click();
-
-            setTimeout(function() {
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-            }, 100);
-
-        } catch (e) {
-            alert("Ошибка при сохранении: " + e.message);
-        }
+            setTimeout(function() { document.body.removeChild(link); window.URL.revokeObjectURL(url); }, 100);
+        } catch (e) { alert("Ошибка при сохранении: " + e.message); }
     }
 
+    /**
+     * Импорт данных из JSON файла (заменяет текущие данные в localStorage).
+     */
     function importFromJson(el) {
         if (!el || !el.files || el.files.length === 0) return;
         var fileToLoad = el.files[0]; 
@@ -608,21 +647,23 @@
         el.value = "";
     }
 
+    // Поддержка Drag-and-Drop для импорта файла
     window.addEventListener("drop", function(e) {
         e.preventDefault();
         var files = e.dataTransfer.files;
         if (files.length > 0) importFromJson({ files: files });
     }, false);
 
-	if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('sw.js').then(function(reg) {
-        console.log('ServiceWorker готов к офлайну!', reg.scope);
-      }).catch(function(err) {
-        console.log('Ошибка SW:', err);
-      });
-    });
-  }
-
+    // Регистрация Service Worker для работы офлайн
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('sw.js').then(function(reg) {
+                console.log('ServiceWorker готов!', reg.scope);
+            }).catch(function(err) {
+                console.log('Ошибка SW:', err);
+            });
+        });
+    }
 </script>
 </body>
+</html>
