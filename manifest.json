@@ -1,6 +1,6 @@
 {
-  "name": "ПСО Панель Опросников",
-  "short_name": "Опросник",
+  "name": "Опросники Группы Прозвона",
+  "short_name": "Опросники",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
