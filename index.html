@@ -24,7 +24,6 @@
         /* ШАПКА И НАВИГАЦИЯ */
         .header-nav { 
             background-color: #37474f; 
-            /* ПРАВКА 1: Отступ сверху для кнопок меню */
             padding: calc(4px + env(safe-area-inset-top, 0px)) 8px 4px 8px; 
             display: grid; 
             grid-template-columns: 1fr auto 1fr; 
@@ -36,9 +35,8 @@
             top: 0; 
             left: 0; 
             right: 0; 
-            /* ПРАВКА 2: Авто-высота, чтобы кнопки не сплющились */
-            height: auto;
-            min-height: 40px; 
+            /* Фиксируем высоту для корректных расчетов */
+            height: calc(40px + env(safe-area-inset-top, 0px));
             overflow-x: auto; 
             white-space: nowrap; 
             scrollbar-width: none; 
@@ -58,7 +56,6 @@
             width: 100%; 
             padding: 5px; 
             padding-right: 20px; 
-            /* ПРАВКА 3: Опускаем весь контент ниже адаптивной шапки */
             margin-top: calc(48px + env(safe-area-inset-top, 0px)); 
             gap: 10px; 
             box-sizing: border-box; 
@@ -73,8 +70,7 @@
             padding: 10px 12px; 
             border-bottom: 2px solid #eee; 
             position: fixed; 
-            /* ПРАВКА 4: Закрепляем блок ЗАЯВКА под новой высотой меню */
-            top: calc(55px + env(safe-area-inset-top, 0px)); 
+            top: calc(40px + env(safe-area-inset-top, 0px) + 8px); 
             left: 5px; 
             width: calc(55% - 14px); 
             z-index: 999; 
@@ -82,7 +78,8 @@
             border-radius: 4px 4px 0 0; 
             box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1); 
         }
-        .sticky-header.unpinned { position: static !important; width: 100% !important; padding: 0 0 8px 0; margin-bottom: 10px; box-shadow: none; }
+        /* Убираем !important, чтобы JS мог управлять позиционированием */
+        .sticky-header.unpinned { position: static; width: 100%; padding: 0 0 8px 0; margin-bottom: 10px; box-shadow: none; }
         
         /* ЭЛЕМЕНТЫ ВВОДА */
         #z_text { width: 100%; min-height: 75px; padding: 6px; box-sizing: border-box; border: 1px solid #cfd8dc; border-radius: 4px; font-family: inherit; font-size: 14px; }
@@ -101,8 +98,7 @@
             cursor: pointer; 
             text-transform: uppercase; 
             position: fixed; 
-            /* ПРАВКА 5: Опускаем кнопку копирования */
-            top: calc(53px + env(safe-area-inset-top, 0px)); 
+            top: calc(40px + env(safe-area-inset-top, 0px) + 8px); 
             right: 10px; 
             width: calc(45% - 10px); 
             z-index: 1001; 
@@ -115,8 +111,7 @@
         #output { 
             width: calc(45% - 10px); 
             position: fixed;
-            /* ПРАВКА 6: Опускаем окно результата */
-            top: calc(105px + env(safe-area-inset-top, 0px)); 
+            top: calc(40px + env(safe-area-inset-top, 0px) + 60px); 
             right: 10px;
             bottom: 10px; 
             height: auto; 
@@ -149,11 +144,20 @@
         }
         
         @media (max-width: 900px) { 
-            /* ПРАВКА 7: Мобильная версия (не-PWA) тоже должна учитывать отступ */
-            .main-wrapper { flex-direction: column; padding-right: 5px; margin-top: calc(50px + env(safe-area-inset-top, 0px)); } 
+            .main-wrapper { flex-direction: column; padding-right: 5px; margin-top: calc(45px + env(safe-area-inset-top, 0px)); } 
             .form-side, .result-side { flex: 0 0 100%; width: 100%; position: static; } 
-            .sticky-header { position: static !important; width: 100% !important; } 
-            #survey-frame { margin-top: 0 !important; } 
+            
+            /* ПРАВКА: Позволяем блоку закрепляться на мобилах, если у него нет класса unpinned */
+            .sticky-header { 
+                position: fixed; 
+                top: calc(40px + env(safe-area-inset-top, 0px)); 
+                left: 0; 
+                width: 100% !important; 
+                border-radius: 0;
+            } 
+            .sticky-header.unpinned { position: static !important; }
+            
+            #survey-frame { margin-top: 10px !important; } 
             .btn-copy { position: static; width: 100%; margin-bottom: 8px; } 
             #output { position: static; width: 100%; margin-top: 0; transform: none !important; max-height: none; } 
         }
