@@ -113,8 +113,33 @@
         .sticky-header.unpinned { position: static !important; width: 100% !important; padding: 0 0 8px 0; margin-bottom: 10px; box-shadow: none; }
 
         /* ЭЛЕМЕНТЫ ВВОДА */
-        #z_text { width: 100%; min-height: 75px; padding: 5px; box-sizing: border-box; border: 1px solid #cfd8dc; border-radius: 4px; font-family: inherit; font-size: 16px; }
-        #z_fixed { display: none; background: #f1f8e9; padding: 5px; border-radius: 6px; border: 1px solid #c8e6c9; line-height: 1.4em; font-size: 16px; color: #1b5e20; white-space: pre-wrap; }
+		#z_text {
+			width: 100%;
+			min-height: 75px;
+			padding: 10px;
+			box-sizing: border-box;
+			border: 1px solid #cfd8dc;
+			border-radius: 4px;
+			font-family: inherit;
+			font-size: 16px;
+			/* Разрешаем тянуть только вниз */
+			resize: vertical; 
+			/* Чтобы текст не прилипал к краям при вводе */
+			line-height: 1.4em; 
+		}
+        
+		#z_fixed { 
+			display: none; 
+			background: #f1f8e9; 
+			padding: 5px; 
+			border-radius: 6px; 
+			border: 1px solid #c8e6c9; 
+			line-height: 1.4em; 
+			font-size: 12px; 
+			color: #1b5e20; 
+			white-space: normal; 
+		}
+		
         .btn-ok { margin-top: 6px; background: #4caf50; color: white; border: none; border-radius: 4px; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
         #survey-frame { width: 100%; height: auto; min-height: 300px; border: none; display: block; overflow: hidden !important; margin-top: 140px; }
 
@@ -141,28 +166,39 @@
         }
 
         #output { 
-            width: calc(45% - 10px); 
-            position: fixed;
-            top: calc(105px + env(safe-area-inset-top, 0px)); 
-            right: 10px;
-            bottom: 10px; 
-            height: auto; 
-            max-height: none; 
-            overflow-y: auto; 
-            padding: 10px 12px; 
-            border-radius: 4px; 
-            border: 1px solid #b0bec5; 
-            font-family: 'Segoe UI', sans-serif; 
-            font-size: 13px; 
-            background: white; 
-            white-space: pre-wrap; 
-            box-sizing: border-box; 
-            color: #263238; 
-            line-height: 1.3; 
-            margin-top: 0;
-            scrollbar-width: none; 
-            -ms-overflow-style: none; 
-        }
+			/* Геометрия и позиционирование (оставляем без изменений) */
+			width: calc(45% - 10px); 
+			position: fixed;
+			top: calc(100px + env(safe-area-inset-top, 0px)); 
+			right: 10px;
+			bottom: 5px; 
+			height: auto; 
+			max-height: none; 
+			overflow-y: auto; 
+			box-sizing: border-box; 
+			
+			/* СТИЛИЗАЦИЯ (теперь как в .form-side) */
+			background: white; 
+			padding: 5px;           /* Совпадает с стилем 1 */
+			border-radius: 4px;     /* Совпадает с стилем 1 */
+			box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* Тень из стиля 1 */
+			border: none;           /* Убрал рамку, так как в стиле 1 её нет */
+
+			/* Типографика и прокрутка (твои настройки) */
+			font-family: 'Segoe UI', sans-serif; 
+			font-size: 13px; 
+			white-space: pre-wrap; 
+			color: #263238; 
+			line-height: 1.3; 
+			scrollbar-width: none; 
+			-ms-overflow-style: none; 
+		}
+
+		/* Скрываем скроллбар для Chrome/Safari, чтобы сохранить "чистый" вид */
+		#output::-webkit-scrollbar {
+			display: none;
+		}
+		
         #output::-webkit-scrollbar { display: none; }
 
         .res-row { margin-bottom: 2px; display: block; transition: background-color 0.3s ease; border-left: 3px solid transparent; }
@@ -262,7 +298,7 @@
             <div id="z_fixed"><div id="z_value"></div></div>
             <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
         </div>
-        <iframe src="short.html?v=14" id="survey-frame" scrolling="no"></iframe>
+        <iframe src="short.html?v=15" id="survey-frame" scrolling="no"></iframe>
     </div>
 
     <div class="result-side">
@@ -338,22 +374,25 @@
      * Превращает обычный текст из textarea в красивые строки <span> внутри блока предпросмотра.
      */
     function renderZ(text) {
-        var valDiv = document.getElementById('z_value');
-        if (!valDiv) return;
-        valDiv.innerHTML = "";
-        var lines = text.split('\n');
-        lines.forEach(function(line) {
-            var span = document.createElement('span');
-            span.innerText = line || ' '; // Сохраняем пустые строки для переноса
-            valDiv.appendChild(span);
-        });
-        // Переключаем видимость кнопок и полей
-        document.getElementById('z_text').style.display = 'none';
-        document.getElementById('z_confirm_btn').style.display = 'none';
-        document.getElementById('z_fixed').style.display = 'block';
-        document.getElementById('z_edit_btn').style.display = 'block';
-        setTimeout(adjustFrameOffset, 30);
-    }
+    var valDiv = document.getElementById('z_value');
+    if (!valDiv) return;
+    
+    // Очищаем текст от лишних пробелов по краям, 
+    // разбиваем на строки и соединяем через черту
+    var flatText = text.trim().split('\n')
+        .filter(line => line.trim() !== "") // Убираем пустые строки, чтобы не было двойных палок ||
+        .join(' | '); 
+    
+    valDiv.innerText = flatText; 
+
+    document.getElementById('z_text').style.display = 'none';
+    document.getElementById('z_confirm_btn').style.display = 'none';
+    document.getElementById('z_fixed').style.display = 'block';
+    document.getElementById('z_edit_btn').style.display = 'block';
+    
+    // Сразу подгоняем отступ фрейма под новую компактную высоту
+    setTimeout(adjustFrameOffset, 30);
+}
 
     /**
      * Возвращает блок "Z" в режим редактирования (показывает textarea).
@@ -550,8 +589,25 @@
         // 1. Восстанавливаем блок Z
         var savedZ = localStorage.getItem('pso_z_main') || "";
         globalZData = savedZ;
-        document.getElementById('z_text').value = savedZ;
-        if (savedZ.trim() === "") { editZ(); } else { renderZ(savedZ); }
+        var zTextarea = document.getElementById('z_text'); // Сразу берем элемент в переменную
+        zTextarea.value = savedZ;
+
+        if (savedZ.trim() === "") { 
+            editZ(); 
+        } else { 
+            renderZ(savedZ); 
+        }
+
+        // --- НОВОЕ: Следим за ручным изменением размера поля Z ---
+        if (zTextarea) {
+            const ro = new ResizeObserver(function() {
+                // Как только высота поля изменилась (потянули за ручку), 
+                // сразу пересчитываем отступ основной анкеты
+                adjustFrameOffset();
+            });
+            ro.observe(zTextarea);
+        }
+        // --------------------------------------------------------
 
         // 2. Восстанавливаем состояние Пина (закрепление шапки)
         var pinnedSetting = localStorage.getItem('pso_header_pinned');
