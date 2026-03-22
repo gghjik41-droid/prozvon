@@ -80,7 +80,7 @@
 			width: 100%; 
 			/* Убираем 20px, оставляем симметричные 5px или вообще 0 для мобилок */
 			padding: 5px;
-			padding-right: 5px			
+			padding-right: 20px			
 			/* Опускаем контент с учетом безопасной зоны iPhone */
 			margin-top: calc(48px + env(safe-area-inset-top, 0px)); 
 			gap: 10px; 
@@ -179,6 +179,7 @@
     .main-wrapper { 
         flex-direction: column; 
         padding: 3; /* Было padding-right: 5px */
+		padding-right: 3px
         margin-top: calc(50px + env(safe-area-inset-top, 0px)); 
     } 
 
@@ -262,7 +263,7 @@
             <div id="z_fixed"><div id="z_value"></div></div>
             <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
         </div>
-        <iframe src="short.html?v=10" id="survey-frame" scrolling="no"></iframe>
+        <iframe src="short.html?v=11" id="survey-frame" scrolling="no"></iframe>
     </div>
 
     <div class="result-side">
