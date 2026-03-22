@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Опросники</title>
 
     <link rel="icon" type="image/png" href="favicon.png">
@@ -18,6 +18,23 @@
     <script data-goatcounter="https://gghjik41.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
     <style>
+				{
+			/* Запрещаем прокрутку вбок на корню */
+			overflow-x: hidden; 
+			/* Запрещаем "резиновый" отскок (bounce эффект) в веб-приложении */
+			overscroll-behavior-x: none; 
+			/* Фиксируем ширину, чтобы ничего не вылезало за края */
+			width: 100%;
+			position: relative;
+			/* Убирает системные синие блики при тапах в некоторых браузерах */
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		/* Принудительно ограничиваем все крупные блоки */
+		.master-container, #master-sticky, .nav-container {
+			max-width: 100vw;
+			overflow-x: hidden;
+		}
         /* ОСНОВНОЙ ВИЗУАЛ */
         body { 
             font-family: 'Segoe UI', sans-serif; 
@@ -298,7 +315,7 @@
             <div id="z_fixed"><div id="z_value"></div></div>
             <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
         </div>
-        <iframe src="short.html?v=15" id="survey-frame" scrolling="no"></iframe>
+        <iframe src="short.html?v=16" id="survey-frame" scrolling="no"></iframe>
     </div>
 
     <div class="result-side">
