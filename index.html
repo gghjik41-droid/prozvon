@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Опросники</title>
 
     <link rel="icon" type="image/png" href="favicon.png">
@@ -178,7 +178,7 @@
     /* 1. Убираем боковые отступы у главного обертки */
     .main-wrapper { 
         flex-direction: column; 
-        padding: 0; /* Было padding-right: 5px */
+        padding: 3; /* Было padding-right: 5px */
         margin-top: calc(50px + env(safe-area-inset-top, 0px)); 
     } 
 
@@ -262,7 +262,7 @@
             <div id="z_fixed"><div id="z_value"></div></div>
             <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
         </div>
-        <iframe src="short.html?v=6" id="survey-frame" scrolling="no"></iframe>
+        <iframe src="short.html?v=7" id="survey-frame" scrolling="no"></iframe>
     </div>
 
     <div class="result-side">
