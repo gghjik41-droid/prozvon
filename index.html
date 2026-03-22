@@ -19,11 +19,34 @@
 
     <style>
         /* ОСНОВНОЙ ВИЗУАЛ */
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; padding-top: env(safe-area-inset-top); background-color: #eceff1; min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; padding-top: env(safe-area-inset-top, 0px); background-color: #eceff1; min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
-        
+
         /* ШАПКА И НАВИГАЦИЯ */
         .header-nav { 
+    background-color: #37474f; 
+    /* Добавляем безопасный отступ сверху для iPhone, на Windows будет 0 */
+    padding: calc(4px + env(safe-area-inset-top, 0px)) 8px 4px 8px; 
+    display: grid; 
+    grid-template-columns: 1fr auto 1fr; 
+    align-items: center; 
+    gap: 10px; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3); 
+    z-index: 1000; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    /* Убираем жесткие 40px и даем шапке расти вместе с отступом */
+    height: auto;
+    min-height: 40px; 
+    overflow-x: auto; 
+    white-space: nowrap; 
+    scrollbar-width: none; 
+}
+		.header-nav::-webkit-scrollbar { display: none; }
             background-color: #37474f; 
+            /* ПРАВКА 1: Отступ сверху для кнопок меню */
             padding: calc(4px + env(safe-area-inset-top, 0px)) 8px 4px 8px; 
             display: grid; 
             grid-template-columns: 1fr auto 1fr; 
@@ -35,27 +58,30 @@
             top: 0; 
             left: 0; 
             right: 0; 
-            /* Фиксируем высоту для корректных расчетов */
-            height: calc(40px + env(safe-area-inset-top, 0px));
+            /* ПРАВКА 2: Авто-высота, чтобы кнопки не сплющились */
+            height: auto;
+            min-height: 40px; 
             overflow-x: auto; 
             white-space: nowrap; 
             scrollbar-width: none; 
         }
         .header-nav::-webkit-scrollbar { display: none; }
-        
+
         /* КНОПКИ УПРАВЛЕНИЯ */
         .clear-btn { background-color: #b71c1c; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .pin-btn { background-color: #546e7a; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .pin-btn.active { background-color: #0288d1; }
         .nav-btn { background-color: #455a64; color: #cfd8dc; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase; white-space: nowrap; }
         .nav-btn.active { background-color: #00c853; color: #fff; }
-        
+
         /* КОНТЕЙНЕРЫ */
+        .main-wrapper { display: flex; width: 100%; padding: 5px; padding-right: 20px; margin-top: 48px; gap: 10px; box-sizing: border-box; align-items: flex-start; }
         .main-wrapper { 
             display: flex; 
             width: 100%; 
             padding: 5px; 
             padding-right: 20px; 
+            /* ПРАВКА 3: Опускаем весь контент ниже адаптивной шапки */
             margin-top: calc(48px + env(safe-area-inset-top, 0px)); 
             gap: 10px; 
             box-sizing: border-box; 
@@ -63,14 +89,16 @@
         }
         .form-side { flex: 0 0 55%; background: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 12px; box-sizing: border-box; position: relative; }
         .result-side { flex: 0 0 45%; display: flex; flex-direction: column; gap: 8px; position: relative; }
-        
+
         /* ЛИПКАЯ ЗАЯВКА */
+        .sticky-header { background: white; padding: 10px 12px; border-bottom: 2px solid #eee; position: fixed; top: 55px; left: 5px; width: calc(55% - 14px); z-index: 999; box-sizing: border-box; border-radius: 4px 4px 0 0; box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1); }
         .sticky-header { 
             background: white; 
             padding: 10px 12px; 
             border-bottom: 2px solid #eee; 
             position: fixed; 
-            top: calc(40px + env(safe-area-inset-top, 0px) + 8px); 
+            /* ПРАВКА 4: Закрепляем блок ЗАЯВКА под новой высотой меню */
+            top: calc(55px + env(safe-area-inset-top, 0px)); 
             left: 5px; 
             width: calc(55% - 14px); 
             z-index: 999; 
@@ -78,16 +106,16 @@
             border-radius: 4px 4px 0 0; 
             box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1); 
         }
-        /* Убираем !important, чтобы JS мог управлять позиционированием */
-        .sticky-header.unpinned { position: static; width: 100%; padding: 0 0 8px 0; margin-bottom: 10px; box-shadow: none; }
-        
+        .sticky-header.unpinned { position: static !important; width: 100% !important; padding: 0 0 8px 0; margin-bottom: 10px; box-shadow: none; }
+
         /* ЭЛЕМЕНТЫ ВВОДА */
         #z_text { width: 100%; min-height: 75px; padding: 6px; box-sizing: border-box; border: 1px solid #cfd8dc; border-radius: 4px; font-family: inherit; font-size: 14px; }
         #z_fixed { display: none; background: #f1f8e9; padding: 8px; border-radius: 6px; border: 1px solid #c8e6c9; line-height: 1.4em; font-size: 13px; color: #1b5e20; white-space: pre-wrap; }
         .btn-ok { margin-top: 6px; background: #4caf50; color: white; border: none; border-radius: 4px; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
         #survey-frame { width: 100%; height: auto; min-height: 300px; border: none; display: block; overflow: hidden !important; margin-top: 140px; }
-        
+
         /* ВЫДАЧА РЕЗУЛЬТАТА */
+        .btn-copy { background-color: #1976d2; color: white; border: none; padding: 12px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; position: fixed; top: 53px; right: 10px; width: calc(45% - 10px); z-index: 1001; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; }
         .btn-copy { 
             background-color: #1976d2; 
             color: white; 
@@ -98,7 +126,8 @@
             cursor: pointer; 
             text-transform: uppercase; 
             position: fixed; 
-            top: calc(40px + env(safe-area-inset-top, 0px) + 8px); 
+            /* ПРАВКА 5: Опускаем кнопку копирования */
+            top: calc(53px + env(safe-area-inset-top, 0px)); 
             right: 10px; 
             width: calc(45% - 10px); 
             z-index: 1001; 
@@ -107,11 +136,13 @@
             justify-content: space-between; 
             align-items: center; 
         }
-        
+
         #output { 
             width: calc(45% - 10px); 
             position: fixed;
-            top: calc(40px + env(safe-area-inset-top, 0px) + 60px); 
+            top: 105px; 
+            /* ПРАВКА 6: Опускаем окно результата */
+            top: calc(105px + env(safe-area-inset-top, 0px)); 
             right: 10px;
             bottom: 10px; 
             height: auto; 
@@ -136,28 +167,20 @@
         .res-row { margin-bottom: 2px; display: block; transition: background-color 0.3s ease; border-left: 3px solid transparent; }
         .res-label { font-weight: 800; color: #1565c0; text-transform: uppercase; font-size: 11px; margin-right: 4px; }
         .res-value { font-family: 'Consolas', 'Courier New', monospace; color: #000; font-size: 13px; }
-        
+
         .res-row.active-focus {
             background-color: #fff9c4;
             border-left: 3px solid #00c853;
             padding-left: 4px;
         }
-        
+
         @media (max-width: 900px) { 
-            .main-wrapper { flex-direction: column; padding-right: 5px; margin-top: calc(45px + env(safe-area-inset-top, 0px)); } 
+            .main-wrapper { flex-direction: column; padding-right: 5px; margin-top: 50px; } 
+            /* ПРАВКА 7: Мобильная версия (не-PWA) тоже должна учитывать отступ */
+            .main-wrapper { flex-direction: column; padding-right: 5px; margin-top: calc(50px + env(safe-area-inset-top, 0px)); } 
             .form-side, .result-side { flex: 0 0 100%; width: 100%; position: static; } 
-            
-            /* ПРАВКА: Позволяем блоку закрепляться на мобилах, если у него нет класса unpinned */
-            .sticky-header { 
-                position: fixed; 
-                top: calc(40px + env(safe-area-inset-top, 0px)); 
-                left: 0; 
-                width: 100% !important; 
-                border-radius: 0;
-            } 
-            .sticky-header.unpinned { position: static !important; }
-            
-            #survey-frame { margin-top: 10px !important; } 
+            .sticky-header { position: static !important; width: 100% !important; } 
+            #survey-frame { margin-top: 0 !important; } 
             .btn-copy { position: static; width: 100%; margin-bottom: 8px; } 
             #output { position: static; width: 100%; margin-top: 0; transform: none !important; max-height: none; } 
         }
@@ -171,7 +194,7 @@
         <button class="clear-btn" onclick="clearAllData()" title="Полная очистка">✕</button>
         <button class="pin-btn active" id="master-pin-btn" onclick="togglePin()" title="Закрепить/открепить шапку заявки">📌</button>
     </div>
-    
+
     <div style="display: flex; gap: 5px; justify-content: center;">
         <button class="nav-btn active" onclick="openSurvey('short.html', this)">Короткий</button>
         <button class="nav-btn" onclick="openSurvey('elderly.html', this)">Старики</button>
@@ -179,7 +202,7 @@
         <button class="nav-btn" onclick="openSurvey('forest.html', this)">Лес</button>
         <button class="nav-btn" onclick="openSurvey('adults.html', this)">Взрослые</button>
     </div>
-    
+
     <div style="display: flex; gap: 5px; justify-self: end; padding-right: 10px;">
         <button class="nav-btn" onclick="exportToJson()" title="Выгрузить JSON">💾</button>
         <button class="nav-btn" onclick="document.getElementById('import-file').click()" title="Загрузить JSON">📂</button>
@@ -200,7 +223,7 @@
         </div>
         <iframe src="short.html" id="survey-frame" scrolling="no"></iframe>
     </div>
-    
+
     <div class="result-side">
         <button class="btn-copy" id="copy-btn" onclick="copyText()">
             <span>Скопировать результат</span>
@@ -217,7 +240,7 @@
     // globalCallsignData — "Позывной / Дата / Время" (используется для системных нужд, например, имени файла)
     var globalCallsignData = localStorage.getItem('pso_global_callsign_data') || ""; 
     var globalFields = JSON.parse(localStorage.getItem('pso_global_fields') || "{}"); 
-    
+
     var currentSource = localStorage.getItem('last_survey_file') ? localStorage.getItem('last_survey_file').replace('.html', '') : 'short';
     var scrollTimeout;
 
@@ -245,7 +268,7 @@
         var val = document.getElementById('z_text').value; 
         globalZData = val;
         localStorage.setItem('pso_z_main', val);
-        
+
         if (val.trim() !== "") {
             renderZ(val);
         }
@@ -294,7 +317,7 @@
         navBtns.forEach(function(b) { b.classList.remove('active'); });
         if (btn) btn.classList.add('active');
         localStorage.setItem('last_survey_file', fileName);
-        
+
         frame.onload = function() {
             broadcastData(globalCallsignData, globalFields);
             adjustFrameOffset();
@@ -325,7 +348,7 @@
 						var row = document.createElement('div');
 						row.className = 'res-row';
 						row.id = 'row-' + currentSource + '-' + index;
-						
+
 						// ПРОВЕРКА: Если это помечено как заголовок (Позывной)
 						if (item.isHeader) {
 							row.innerHTML = '<span class="res-value" style="font-weight:bold; display:block; margin-bottom:15px; font-size:1.1em; border-bottom:1px solid #444; padding-bottom:5px;">' + item.value + '</span>';
@@ -338,7 +361,7 @@
 						else {
 							row.innerHTML = '<span class="res-value">' + item.value + '</span>';
 						}
-						
+
 						outDiv.appendChild(row);
 					});
 				}
@@ -378,7 +401,7 @@
             if (globalCallsignData !== event.data.value) {
                 globalCallsignData = event.data.value;
                 localStorage.setItem('pso_global_callsign_data', globalCallsignData);
-                
+
                 // Обновляем выдачу, так как payload тоже изменился
                 updateFinalOutput(); 
             }
@@ -441,7 +464,7 @@
         var savedZ = localStorage.getItem('pso_z_main') || "";
         globalZData = savedZ;
         document.getElementById('z_text').value = savedZ;
-        
+
         if (savedZ.trim() === "") {
             editZ(); 
         } else {
@@ -457,7 +480,7 @@
             localStorage.setItem('pso_global_callsign_data', savedCall);
         }
         globalCallsignData = savedCall;
-        
+
         var lastFile = localStorage.getItem('last_survey_file') || 'short.html';
         var buttons = document.querySelectorAll('.nav-btn');
         var found = false;
@@ -473,7 +496,7 @@
     };
 
     window.addEventListener('resize', adjustFrameOffset);
-    
+
     function exportToJson() {
         try {
             var backup = {};
@@ -497,14 +520,14 @@
             var dataStr = JSON.stringify(backup, null, 2);
             var blob = new Blob([dataStr], {type: "application/json"});
             var url = URL.createObjectURL(blob);
-            
+
             var link = document.createElement('a');
             link.href = url;
             link.download = safeName + ".json";
-            
+
             document.body.appendChild(link);
             link.click();
-            
+
             setTimeout(function() {
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(url);
@@ -538,7 +561,7 @@
         var files = e.dataTransfer.files;
         if (files.length > 0) importFromJson({ files: files });
     }, false);
-	
+
 	if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
       navigator.serviceWorker.register('sw.js').then(function(reg) {
@@ -548,7 +571,6 @@
       });
     });
   }
-	
+
 </script>
 </body>
-</html>
