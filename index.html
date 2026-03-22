@@ -175,15 +175,56 @@
         }
 
         @media (max-width: 900px) { 
-            .main-wrapper { flex-direction: column; padding-right: 5px; margin-top: 50px; } 
-            /* ПРАВКА 7: Мобильная версия (не-PWA) тоже должна учитывать отступ */
-            .main-wrapper { flex-direction: column; padding-right: 5px; margin-top: calc(50px + env(safe-area-inset-top, 0px)); } 
-            .form-side, .result-side { flex: 0 0 100%; width: 100%; position: static; } 
-            .sticky-header { position: static !important; width: 100% !important; } 
-            #survey-frame { margin-top: 0 !important; } 
-            .btn-copy { position: static; width: 100%; margin-bottom: 8px; } 
-            #output { position: static; width: 100%; margin-top: 0; transform: none !important; max-height: none; } 
-        }
+    /* 1. Убираем боковые отступы у главного обертки */
+    .main-wrapper { 
+        flex-direction: column; 
+        padding: 0; /* Было padding-right: 5px */
+        margin-top: calc(50px + env(safe-area-inset-top, 0px)); 
+    } 
+
+    /* 2. Убираем внутренний отступ у контейнера формы (те самые 12px) */
+    .form-side { 
+        padding: 4px !important; /* Оставляем минимум, чтобы рамки полей не терлись об экран */
+        flex: 0 0 100%; 
+        width: 100%; 
+        position: static; 
+        box-shadow: none; /* На мобилке тени по бокам обычно только мешают */
+    }
+
+    .result-side { 
+        flex: 0 0 100%; 
+        width: 100%; 
+        position: static; 
+        padding: 4px; 
+    } 
+
+    /* 3. Заявка и кнопка копирования */
+    .sticky-header { 
+        position: static !important; 
+        width: 100% !important; 
+        padding: 0 0 8px 0; /* Убираем боковые padding здесь */
+    } 
+
+    #survey-frame { margin-top: 0 !important; } 
+
+    .btn-copy { 
+        position: static; 
+        width: 100%; 
+        margin-bottom: 8px; 
+        box-sizing: border-box; /* Чтобы padding не раздувал кнопку */
+    } 
+
+    #output { 
+        position: static; 
+        width: 100%; 
+        margin-top: 0; 
+        transform: none !important; 
+        max-height: none; 
+    }
+
+    /* 4. Скрываем пин, как договорились */
+    #master-pin-btn { display: none !important; }
+}
     </style>
 	
 </head>
