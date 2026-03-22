@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pso-v2'; // Поменял версию на v2
+const CACHE_NAME = 'pso-v3'; // Подняли версию
 const filesToCache = [
   './',
   './index.html',
@@ -7,56 +7,48 @@ const filesToCache = [
   './teens.html',
   './forest.html',
   './adults.html',
+  './manifest.json',
   './favicon.png',
-  './apple-touch-icon.png',
-  './manifest.json'
+  './apple-touch-icon.png'
 ];
 
-// Установка: кэшируем файлы
+// Установка
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(filesToCache);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(filesToCache))
   );
-  self.skipWaiting(); // Принудительно активируем новый SW
+  self.skipWaiting();
 });
 
-// Активация: чистим старый кэш
+// Активация и удаление старого хлама
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
+    caches.keys().then((keys) => Promise.all(
+      keys.map((key) => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      })
+    ))
   );
+  return self.clients.claim();
 });
 
-// ПЕРЕХВАТ ЗАПРОСОВ (Самое важное!)
+// Главный обработчик запросов
 self.addEventListener('fetch', (event) => {
-  // Игнорируем запросы к аналитике и внешним скриптам, чтобы не ломать офлайн
-  if (event.request.url.includes('goatcounter') || event.request.url.includes('gc.zgo.at')) {
-    return;
-  }
+  // Пропускаем аналитику
+  if (event.request.url.includes('goatcounter')) return;
 
   event.respondWith(
     caches.match(event.request).then((response) => {
-      // Если файл есть в кэше — отдаем его
-      if (response) {
-        return response;
-      }
-      // Если файла нет в кэше (например, при попытке загрузки JSON или обновлении)
-      // Пытаемся взять из сети, а если сети нет — не выдаем ошибку "страница не найдена"
+      // 1. Если нашли в кэше — отдаем сразу
+      if (response) return response;
+
+      // 2. Если нет в кэше, пробуем сеть
       return fetch(event.request).catch(() => {
-        // Если это был переход на страницу, отдаем хотя бы индекс
+        // 3. Если СЕТИ НЕТ и это переход/обновление страницы (navigate)
         if (event.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
+        // Если это картинка или другой файл, которого нет в кэше — просто отдаем ошибку
       });
     })
   );
