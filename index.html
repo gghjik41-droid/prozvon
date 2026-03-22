@@ -88,14 +88,23 @@
             align-items: flex-start;
 			}
 			
-        .form-side { flex: 0 0 55%; background: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 12px; box-sizing: border-box; position: relative; }
+        .form-side { 
+			flex: 0 0 55%; 
+			background: white; 
+			border-radius: 4px; 
+			box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
+			padding: 5px; 
+			box-sizing: border-box; 
+			position: relative; 
+		}
+		
         .result-side { flex: 0 0 45%; display: flex; flex-direction: column; gap: 8px; position: relative; }
 
         /* ЛИПКАЯ ЗАЯВКА */
-        .sticky-header { background: white; padding: 10px 12px; border-bottom: 2px solid #eee; position: fixed; top: 55px; left: 5px; width: calc(55% - 14px); z-index: 999; box-sizing: border-box; border-radius: 4px 4px 0 0; box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1); }
+      
         .sticky-header { 
             background: white; 
-            padding: 10px 12px; 
+            padding: 3px 5px; 
             border-bottom: 2px solid #eee; 
             position: fixed; 
             /* ПРАВКА 4: Закрепляем блок ЗАЯВКА под новой высотой меню */
@@ -110,8 +119,8 @@
         .sticky-header.unpinned { position: static !important; width: 100% !important; padding: 0 0 8px 0; margin-bottom: 10px; box-shadow: none; }
 
         /* ЭЛЕМЕНТЫ ВВОДА */
-        #z_text { width: 100%; min-height: 75px; padding: 6px; box-sizing: border-box; border: 1px solid #cfd8dc; border-radius: 4px; font-family: inherit; font-size: 16px; }
-        #z_fixed { display: none; background: #f1f8e9; padding: 8px; border-radius: 6px; border: 1px solid #c8e6c9; line-height: 1.4em; font-size: 16px; color: #1b5e20; white-space: pre-wrap; }
+        #z_text { width: 100%; min-height: 75px; padding: 5px; box-sizing: border-box; border: 1px solid #cfd8dc; border-radius: 4px; font-family: inherit; font-size: 16px; }
+        #z_fixed { display: none; background: #f1f8e9; padding: 5px; border-radius: 6px; border: 1px solid #c8e6c9; line-height: 1.4em; font-size: 16px; color: #1b5e20; white-space: pre-wrap; }
         .btn-ok { margin-top: 6px; background: #4caf50; color: white; border: none; border-radius: 4px; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
         #survey-frame { width: 100%; height: auto; min-height: 300px; border: none; display: block; overflow: hidden !important; margin-top: 140px; }
 
@@ -264,7 +273,7 @@
             <div id="z_fixed"><div id="z_value"></div></div>
             <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
         </div>
-        <iframe src="short.html?v=12" id="survey-frame" scrolling="no"></iframe>
+        <iframe src="short.html?v=13" id="survey-frame" scrolling="no"></iframe>
     </div>
 
     <div class="result-side">
