@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>ПСО Панель Опросников</title>
 	<link rel="icon" type="image/png" href="favicon.png">
+	<link rel="manifest" href="manifest.json">
     <style>
         /* ОСНОВНОЙ ВИЗУАЛ */
         body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; padding-top: env(safe-area-inset-top); background-color: #eceff1; min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
@@ -460,7 +461,15 @@
         if (files.length > 0) importFromJson({ files: files });
     }, false);
 	
-	
+	if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('sw.js').then(function(reg) {
+        console.log('ServiceWorker готов к офлайну!', reg.scope);
+      }).catch(function(err) {
+        console.log('Ошибка SW:', err);
+      });
+    });
+  }
 	
 </script>
 </body>
