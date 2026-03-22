@@ -75,18 +75,19 @@
         .nav-btn.active { background-color: #00c853; color: #fff; }
 
         /* КОНТЕЙНЕРЫ */
+
         .main-wrapper { 
-			display: flex; 
-			width: 100%; 
-			/* Убираем 20px, оставляем симметричные 5px или вообще 0 для мобилок */
-			padding: 5px;
-			padding-right: 20px			
-			/* Опускаем контент с учетом безопасной зоны iPhone */
-			margin-top: calc(48px + env(safe-area-inset-top, 0px)); 
-			gap: 10px; 
-			box-sizing: border-box; 
-			align-items: flex-start; 
-		}
+            display: flex; 
+            width: 100%; 
+            padding: 5px; 
+            padding-right: 20px; 
+            /* ПРАВКА 3: Опускаем весь контент ниже адаптивной шапки */
+            margin-top: calc(48px + env(safe-area-inset-top, 0px)); 
+            gap: 10px; 
+            box-sizing: border-box; 
+            align-items: flex-start;
+			}
+			
         .form-side { flex: 0 0 55%; background: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 12px; box-sizing: border-box; position: relative; }
         .result-side { flex: 0 0 45%; display: flex; flex-direction: column; gap: 8px; position: relative; }
 
@@ -263,7 +264,7 @@
             <div id="z_fixed"><div id="z_value"></div></div>
             <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
         </div>
-        <iframe src="short.html?v=11" id="survey-frame" scrolling="no"></iframe>
+        <iframe src="short.html?v=12" id="survey-frame" scrolling="no"></iframe>
     </div>
 
     <div class="result-side">
