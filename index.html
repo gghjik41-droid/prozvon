@@ -272,9 +272,50 @@
 
 				#master-pin-btn { display: none !important; }
 			}
+
+			/* ЭКРАН ЗАГРУЗКИ (Loader) */
+			#loader-wrapper {
+				position: fixed;
+				top: 0; left: 0;
+				width: 100%; height: 100%;
+				background-color: #37474f;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				z-index: 9999;
+				transition: opacity 0.4s ease, visibility 0.4s ease;
+			}
+			.loader {
+				width: 45px; height: 45px;
+				border: 4px solid #cfd8dc;
+				border-top: 4px solid #00c853;
+				border-radius: 50%;
+				animation: loader-spin 1s linear infinite;
+			}
+			.loader-text {
+				margin-top: 15px;
+				color: white;
+				font-size: 13px;
+				font-weight: bold;
+				letter-spacing: 1px;
+				text-transform: uppercase;
+				/* Учитываем safe-area на случай если текст прижмет к челке */
+				padding-top: env(safe-area-inset-top, 0px);
+			}
+			@keyframes loader-spin {
+				0% { transform: rotate(0deg); }
+				100% { transform: rotate(360deg); }
+			}
+			.loader-hidden { opacity: 0; visibility: hidden; }
 		</style>
 </head>
 <body>
+
+<div id="loader-wrapper">
+    <div class="loader"></div>
+    <div class="loader-text">Загрузка опросников...</div>
+</div>
 
 <div class="header-nav" id="menu">
     <div style="display: flex; gap: 5px; justify-self: start;">
@@ -308,7 +349,7 @@
             <div id="z_fixed"><div id="z_value"></div></div>
             <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
         </div>
-        <iframe src="short.html?v=19" id="survey-frame" scrolling="no"></iframe>
+        <iframe src="short.html?v=20" id="survey-frame" scrolling="no"></iframe>
     </div>
 
     <div class="result-side">
@@ -323,24 +364,30 @@
 <script>
     // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
     var ORDER = ['short', 'elderly', 'teens', 'forest', 'adults']; 
-    // Загружаем данные из памяти браузера (localStorage) или ставим пустые значения
     var globalZData = localStorage.getItem('pso_z_main') || "";
     var globalCallsignData = localStorage.getItem('pso_global_callsign_data') || ""; 
     var globalFields = JSON.parse(localStorage.getItem('pso_global_fields') || "{}"); 
 
-    // Определяем текущий активный опросник (последний открытый или 'short' по умолчанию)
     var currentSource = localStorage.getItem('last_survey_file') ? localStorage.getItem('last_survey_file').replace('.html', '') : 'short';
     var scrollTimeout;
 
     /**
+     * Показывает или скрывает экран загрузки
+     */
+    function toggleLoader(show) {
+        const loader = document.getElementById('loader-wrapper');
+        if (loader) {
+            if (show) loader.classList.remove('loader-hidden');
+            else loader.classList.add('loader-hidden');
+        }
+    }
+
+    /**
      * Подстраивает верхний отступ фрейма (анкеты).
-     * Если шапка закреплена (pinned), фрейм опускается вниз на высоту шапки,
-     * чтобы текст не заезжал под неё.
      */
     function adjustFrameOffset() {
         var header = document.getElementById('master-sticky');
         var frame = document.getElementById('survey-frame');
-        // Если шапка есть, она НЕ откреплена (нет класса unpinned) и ширина экрана > 900px
         if (header && frame && !header.classList.contains('unpinned') && window.innerWidth > 900) {
             frame.style.marginTop = (header.offsetHeight + 10) + 'px';
         } else {
@@ -350,26 +397,20 @@
 
     /**
      * Переключает состояние закрепления шапки (Pin).
-     * Сохраняет выбор пользователя в localStorage.
      */
     function togglePin() {
         var btn = document.getElementById('master-pin-btn');
         var header = document.getElementById('master-sticky');
         if (!btn || !header) return;
         
-        // Переключаем классы
         var isActive = btn.classList.toggle('active');
         header.classList.toggle('unpinned', !isActive);
-        
-        // СОХРАНЯЕМ: записываем в память true (закреплено) или false (откреплено)
         localStorage.setItem('pso_header_pinned', isActive);
-        
         adjustFrameOffset();
     }
 
     /**
-     * Применяет изменения в поле "Z" (ввод основной инфы по заявке).
-     * Скрывает текстовое поле и отображает отрендеренный текст.
+     * Применяет изменения в поле "Z".
      */
     function fixZ() {
         var val = document.getElementById('z_text').value; 
@@ -381,31 +422,28 @@
     }
 
     /**
-     * Превращает обычный текст из textarea в красивые строки <span> внутри блока предпросмотра.
+     * Рендерит Z-текст.
      */
     function renderZ(text) {
-    var valDiv = document.getElementById('z_value');
-    if (!valDiv) return;
-    
-    // Очищаем текст от лишних пробелов по краям, 
-    // разбиваем на строки и соединяем через черту
-    var flatText = text.trim().split('\n')
-        .filter(line => line.trim() !== "") // Убираем пустые строки, чтобы не было двойных палок ||
-        .join(' | '); 
-    
-    valDiv.innerText = flatText; 
+        var valDiv = document.getElementById('z_value');
+        if (!valDiv) return;
+        
+        var flatText = text.trim().split('\n')
+            .filter(line => line.trim() !== "") 
+            .join(' | '); 
+        
+        valDiv.innerText = flatText; 
 
-    document.getElementById('z_text').style.display = 'none';
-    document.getElementById('z_confirm_btn').style.display = 'none';
-    document.getElementById('z_fixed').style.display = 'block';
-    document.getElementById('z_edit_btn').style.display = 'block';
-    
-    // Сразу подгоняем отступ фрейма под новую компактную высоту
-    setTimeout(adjustFrameOffset, 30);
-}
+        document.getElementById('z_text').style.display = 'none';
+        document.getElementById('z_confirm_btn').style.display = 'none';
+        document.getElementById('z_fixed').style.display = 'block';
+        document.getElementById('z_edit_btn').style.display = 'block';
+        
+        setTimeout(adjustFrameOffset, 30);
+    }
 
     /**
-     * Возвращает блок "Z" в режим редактирования (показывает textarea).
+     * Редактирование Z.
      */
     function editZ() {
         var zInput = document.getElementById('z_text');
@@ -418,7 +456,7 @@
     }
 
     /**
-     * Передает данные внутрь <iframe> (анкеты) с помощью postMessage.
+     * Передает данные внутрь <iframe>.
      */
     function broadcastData(call, fields) {
         var frame = document.getElementById('survey-frame');
@@ -428,11 +466,15 @@
     }
 
     /**
-     * Переключает анкеты (вкладки). Меняет src у iframe и обновляет активную кнопку.
+     * Переключает анкеты.
      */
     function openSurvey(fileName, btn) {
         var frame = document.getElementById('survey-frame');
         if (!frame) return;
+        
+        // Показываем лоадер при переключении
+        toggleLoader(true);
+
         currentSource = fileName.replace('.html', '');
         frame.src = fileName;
         var navBtns = document.querySelectorAll('.nav-btn');
@@ -444,11 +486,13 @@
             broadcastData(globalCallsignData, globalFields);
             adjustFrameOffset();
             updateFinalOutput();
+            // Скрываем после прогрузки фрейма
+            setTimeout(() => toggleLoader(false), 200);
         };
     }
 
     /**
-     * Полная очистка всей памяти и перезагрузка страницы (Красный крест).
+     * Полная очистка.
      */
     function clearAllData() {
         if (confirm("Очистить все формы и результат?")) {
@@ -458,8 +502,7 @@
     }
 
     /**
-     * Обновляет итоговый текстовый блок справа.
-     * Берет данные из localStorage и превращает их в строки с метками.
+     * Обновляет итоговый текстовый блок.
      */
     function updateFinalOutput() {
         var outDiv = document.getElementById('output');
@@ -490,7 +533,6 @@
                 }
             } catch(e) { console.error("Ошибка отрисовки", e); }
         }
-        // Обновляем метку времени последнего изменения
         var status = document.getElementById('save-status');
         if (status) {
             var now = new Date();
@@ -500,17 +542,14 @@
     }
 
     /**
-     * Слушатель событий от iFrame.
-     * Обрабатывает: обновление данных анкеты, синхронизацию прокрутки, глобальные поля и высоту.
+     * Слушатель postMessage.
      */
     window.addEventListener('message', function(event) {
-        // Обновление текста анкеты
         if (event.data.type === 'survey_update') {
             localStorage.setItem('survey_text_' + event.data.source, JSON.stringify(event.data.payload));
             if (event.data.source === currentSource) updateFinalOutput();
         }
 
-        // Подсветка и скролл к нужной строке в итоговом результате при вводе во фрейме
         if (event.data.type === 'sync_scroll') {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(function() {
@@ -526,7 +565,6 @@
             }, 100);
         }
 
-        // Синхронизация позывного/даты
         if (event.data.type === 'sync_globals') {
             if (globalCallsignData !== event.data.value) {
                 globalCallsignData = event.data.value;
@@ -535,7 +573,6 @@
             }
         }
 
-        // Синхронизация отдельных полей (например, ФИО или Пол) между разными анкетами
         if (event.data.type === 'sync_field') {
             if (globalFields[event.data.fieldId] !== event.data.value) {
                 globalFields[event.data.fieldId] = event.data.value;
@@ -544,7 +581,6 @@
             }
         }
 
-        // Авто-высота фрейма, чтобы не было двойного скролла
         if (event.data.type === 'set_height') {
             var frame = document.getElementById('survey-frame');
             if (frame && event.data.height) {
@@ -555,7 +591,7 @@
     });
 
     /**
-     * Копирует итоговый результат в буфер обмена.
+     * Копирование.
      */
     function copyText() {
         var out = document.getElementById('output');
@@ -579,7 +615,6 @@
         document.execCommand('copy');
         document.body.removeChild(tempArea);
 
-        // Индикация успешного копирования на кнопке
         var btn = document.getElementById('copy-btn');
         if (btn) {
             var oldContent = btn.innerHTML;
@@ -593,13 +628,12 @@
     }
 
     /**
-     * Основная инициализация при загрузке страницы.
+     * Инициализация.
      */
     window.onload = function() {
-        // 1. Восстанавливаем блок Z
         var savedZ = localStorage.getItem('pso_z_main') || "";
         globalZData = savedZ;
-        var zTextarea = document.getElementById('z_text'); // Сразу берем элемент в переменную
+        var zTextarea = document.getElementById('z_text');
         zTextarea.value = savedZ;
 
         if (savedZ.trim() === "") { 
@@ -608,18 +642,13 @@
             renderZ(savedZ); 
         }
 
-        // --- НОВОЕ: Следим за ручным изменением размера поля Z ---
         if (zTextarea) {
             const ro = new ResizeObserver(function() {
-                // Как только высота поля изменилась (потянули за ручку), 
-                // сразу пересчитываем отступ основной анкеты
                 adjustFrameOffset();
             });
             ro.observe(zTextarea);
         }
-        // --------------------------------------------------------
 
-        // 2. Восстанавливаем состояние Пина (закрепление шапки)
         var pinnedSetting = localStorage.getItem('pso_header_pinned');
         var pinBtn = document.getElementById('master-pin-btn');
         var stickyHeader = document.getElementById('master-sticky');
@@ -630,7 +659,6 @@
             stickyHeader.classList.toggle('unpinned', !isPinned);
         }
 
-        // 3. Восстанавливаем позывной или создаем дату/время по умолчанию
         var savedCall = localStorage.getItem('pso_global_callsign_data');
         if (savedCall === null) { 
             var now = new Date();
@@ -641,7 +669,6 @@
         }
         globalCallsignData = savedCall;
 
-        // 4. Открываем последнюю использованную анкету
         var lastFile = localStorage.getItem('last_survey_file') || 'short.html';
         var buttons = document.querySelectorAll('.nav-btn');
         var found = false;
@@ -651,17 +678,17 @@
                 found = true;
             }
         });
-        if(!found && buttons.length > 0) openSurvey('short.html', buttons);
+        if(!found && buttons.length > 0) openSurvey('short.html', buttons[0]);
 
         updateFinalOutput();
         setTimeout(adjustFrameOffset, 150);
+
+        // Убираем лоадер после завершения всей логики загрузки
+        setTimeout(() => toggleLoader(false), 500);
     };
 
     window.addEventListener('resize', adjustFrameOffset);
 
-    /**
-     * Экспорт всех данных в JSON файл для бэкапа.
-     */
     function exportToJson() {
         try {
             var backup = {};
@@ -672,12 +699,10 @@
                     backup[k] = localStorage.getItem(k);
                 }
             }
-
             var callsign = localStorage.getItem('pso_global_callsign_data');
             var rawString = String(callsign || "pso_backup");
             var firstLine = String(rawString.split('\n')[0]);
             var safeName = firstLine.trim().replace(/[:.\/\\?%*|"<>]/g, '-').replace(/\s+/g, '_');
-
             if (!safeName) safeName = "pso_backup";
 
             var dataStr = JSON.stringify(backup, null, 2);
@@ -692,9 +717,6 @@
         } catch (e) { alert("Ошибка при сохранении: " + e.message); }
     }
 
-    /**
-     * Импорт данных из JSON файла (заменяет текущие данные в localStorage).
-     */
     function importFromJson(el) {
         if (!el || !el.files || el.files.length === 0) return;
         var fileToLoad = el.files[0]; 
@@ -713,14 +735,12 @@
         el.value = "";
     }
 
-    // Поддержка Drag-and-Drop для импорта файла
     window.addEventListener("drop", function(e) {
         e.preventDefault();
         var files = e.dataTransfer.files;
         if (files.length > 0) importFromJson({ files: files });
     }, false);
 
-    // Регистрация Service Worker для работы офлайн
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('sw.js').then(function(reg) {
