@@ -1,7 +1,6 @@
-const CACHE_NAME = 'pso-v21';
+const CACHE_NAME = 'pso-stable';
 
-// Список всех твоих файлов. 
-// ОБЯЗАТЕЛЬНО проверь, что названия совпадают до буквы!
+// Список файлов для оффлайн-режима
 const filesToCache = [
   './',
   './index.html',
@@ -14,18 +13,18 @@ const filesToCache = [
   './favicon.png'
 ];
 
-// 1. Установка: открываем сейф и складываем файлы
+// 1. Установка: сохраняем базу в кэш
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Кэшируем файлы для ПСО...');
+      console.log('Подготовка оффлайн-копии файлов...');
       return cache.addAll(filesToCache);
     })
   );
-  self.skipWaiting(); // Принудительно вытесняем старую версию v3
+  self.skipWaiting();
 });
 
-// 2. Активация: сжигаем старые версии кэша, если они есть
+// 2. Активация: чистим старье
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
@@ -37,34 +36,38 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// 3. Перехват: магия офлайна тут
+// 3. Стратегия "Network First" (Сначала сеть)
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-
-  // Игнорируем внешние запросы (аналитика GoatCounter и прочее)
-  // Мы обрабатываем ТОЛЬКО то, что лежит на твоем домене
-  if (url.origin !== self.location.origin) {
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Если нашли файл в кэше — отдаем его мгновенно
-      if (response) {
-        return response;
-      }
-
-      // Если в кэше нет — пытаемся сходить в интернет
-      return fetch(event.request).catch((err) => {
-        // Если интернета НЕТ и это попытка открыть страницу (HTML)
+    // Создаем гонку: либо сеть ответит быстро, либо сработает таймер
+    Promise.race([
+      fetch(event.request).then((networkResponse) => {
+        // Если сеть ответила — обновляем кэш и возвращаем ответ
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }),
+      // Таймер на 3000 мс (3 секунды)
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+    ])
+    .catch(() => {
+      // Сюда попадаем, если интернет пропал ИЛИ если сработал таймаут 3 сек
+      return caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          console.log('Сеть тормозит или оффлайн, отдали из кэша:', event.request.url);
+          return cachedResponse;
+        }
+        // Если и в кэше нет — идем на главную
         if (event.request.mode === 'navigate') {
-          console.log('Сети нет, отдаем главную из кэша');
           return caches.match('./index.html');
         }
-        
-        // Для картинок или мелких скриптов просто возвращаем пустой ответ, 
-        // чтобы браузер не выкидывал критическую ошибку
-        return new Response('Offline', { status: 503, statusText: 'Offline' });
       });
     })
   );
