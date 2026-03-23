@@ -216,7 +216,13 @@
 
 			.res-row { margin-bottom: 2px; display: block; transition: background-color 0.3s ease; border-left: 3px solid transparent; }
 			.res-label { font-weight: 800; color: #1565c0; text-transform: uppercase; font-size: 11px; margin-right: 4px; }
-			.res-value { font-family: 'Consolas', 'Courier New', monospace; color: #000; font-size: 13px; }
+			.res-value { 
+				/* Добавляем современные системные шрифты перед monospace */
+				font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace; 
+				color: #000; 
+				font-size: 13px; 
+				font-weight: 500; /* Немного увеличим плотность для читаемости на экранах */
+			}
 
 			.res-row.active-focus {
 				background-color: #fff9c4;
@@ -349,7 +355,7 @@
             <div id="z_fixed"><div id="z_value"></div></div>
             <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
         </div>
-        <iframe src="short.html?v=20" id="survey-frame" scrolling="no"></iframe>
+        <iframe src="short.html?v=21" id="survey-frame" scrolling="no"></iframe>
     </div>
 
     <div class="result-side">
@@ -472,8 +478,8 @@
         var frame = document.getElementById('survey-frame');
         if (!frame) return;
         
-        // Показываем лоадер при переключении
-        toggleLoader(true);
+        // НЕ показываем лоадер при переключении
+        <!-- toggleLoader(true); -->
 
         currentSource = fileName.replace('.html', '');
         frame.src = fileName;
