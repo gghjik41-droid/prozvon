@@ -219,6 +219,13 @@
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
     </div>
 
+	<div class="field-group">
+	    <span class="hint">Не служит ли в армии в настоящий момент, не скрывается от службы, СВО.</span>
+	    <label>Воинская обязанность:</label>
+	    <div id="g_army" class="editable-field q-field q-global" contenteditable="true" data-p="Воинская обязанность: " oninput="syncField(this)"></div>
+	    <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
+	</div>
+	
     <div class="field-group">
         <span class="hint">Диагнозы, медикаменты, слух/зрение/ходьба, ориентирование во времени и пространстве, память.</span>
         <label>Здоровье:</label>
@@ -255,7 +262,7 @@
     </div>
 
     <div class="field-group">
-        <span class="hint">Даже если остался дома. На кого зарегистрирована симка, марка и модель. Если сим на заявителя - попросить взять выписку звонков. В сети ли сейчас телефон. Когда был в сети в последний раз. Спрашиваем все номера.</span>
+        <span class="hint">Даже если остался дома. Операто симки, на кого зарегистрирована симка, марка и модель телефона. Если сим на заявителя - попросить взять выписку звонков. В сети ли сейчас телефон. Когда был в сети в последний раз. Спрашиваем все номера.</span>
         <label>Телефон БВП:</label>
         <div id="g_namber" class="editable-field q-field q-global" contenteditable="true" data-p="Телефон БВП: " oninput="syncField(this)"></div>
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
@@ -275,7 +282,7 @@
     </div>
 
     <div class="field-group">
-        <span class="hint">ОБСТОЯТЕЛЬСТВА ПРОПАЖИ ПОДРОБНО Дата и время пропажи (во сколько стал недоступен/не отвечать на тел)! Что предпринимали для поиска (были на месте пропажи, звонили в БРНС).</span>
+        <span class="hint">ОБСТОЯТЕЛЬСТВА ПРОПАЖИ ПОДРОБНО Дата и время пропажи (во сколько стал недоступен/не отвечать на тел)! Что предпринимали для поиска (были на месте пропажи, звонили куда-то, кому-то).</span>
         <label>Подробности:</label>
         <div id="g_eventfull" class="editable-field q-field q-global" contenteditable="true" data-p="Подробности: " oninput="syncField(this)"></div>
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
@@ -287,6 +294,13 @@
         <div id="g_police" class="editable-field q-field q-global" contenteditable="true" data-p="ЗВП: " oninput="syncField(this)"></div>
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
     </div>
+
+	<div class="field-group">
+	    <span class="hint">Согласие на ориентировки, на указание "нуждается в медпомощи" (если необходимо). Объяснить, что информация будет размещена в интернете. ЗАПРОСИТЬ ФОТО БВП </span>
+	    <label>Согласие на орки:</label>
+	    <div id="g_miss" class="editable-field q-field q-global" contenteditable="true" data-p="Согласие на орки: " oninput="syncField(this)"></div>
+	    <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
+	</div>
 
 <div class="section-title">Специальная часть:</div>
 
@@ -392,12 +406,7 @@
     <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
 </div>
 
-<div class="field-group">
-    <span class="hint">Не служит ли в армии в настоящий момент, не скрывается от службы. СВО.</span>
-    <label>Воинская обязанность:</label>
-    <div id="g_army" class="editable-field q-field q-global" contenteditable="true" data-p="Воинская обязанность: " oninput="syncField(this)"></div>
-    <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
-</div>
+
 
 <div class="field-group">
     <span class="hint">Курение, алкоголь (как часто, в одиночестве или с кем-то, дома или где-то), если может уйти в запой – на как долго, выходит самостоятельно или с помощью, наркотики – если да, какие, как часто, где берет.</span>
@@ -412,12 +421,7 @@
     <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
 </div>
 
-<div class="field-group">
-    <span class="hint">Согласие на ориентировки, указание медпомощи (если необходимо). Объяснить, что информация будет размещена в интернете.</span>
-    <label>Согласие на орки:</label>
-    <div id="g_miss" class="editable-field q-field q-global" contenteditable="true" data-p="Согласие на орки: " oninput="syncField(this)"></div>
-    <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
-</div>
+
 
 <script>
 	var STORAGE_KEY = 'survey_cache_adults_v51'; 
