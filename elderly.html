@@ -214,11 +214,18 @@
     </div>
 
     <div class="field-group">
-        <span class="hint">Коротко: адрес пропажи (город, район, улица, № дома, № подъезда, № квартиры), дата, время.</span>
+        <span class="hint">Коротко об обстоятельствах: дата, время, адрес пропажи (город, район, улица, № дома, № подъезда, № квартиры).</span>
         <div id="g_event" class="editable-field q-field q-global" contenteditable="true" data-p="" oninput="syncField(this)" placeholder="Обстоятельства..."></div>
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
     </div>
 
+	<div class="field-group">
+	    <span class="hint">Не служит ли в армии в настоящий момент, не скрывается от службы, СВО.</span>
+	    <label>Воинская обязанность:</label>
+	    <div id="g_army" class="editable-field q-field q-global" contenteditable="true" data-p="Воинская обязанность: " oninput="syncField(this)"></div>
+	    <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
+	</div>
+	
     <div class="field-group">
         <span class="hint">Диагнозы/медикаменты (что будет, если не принять). Есть ли инвалидность. Когда началось/как проявляется заболевание. Есть ли внешние проявления заболевания/странности поведения. Если проблемы с памятью – подробно, как проявляются, что помнит, что не помнит. Как ориентируется в пространстве. Как слышит/видит/ходит, ориентир во времени и пространстве.
 Назовет ли себя, свое фио, адрес, телефон родственников. Если да, проверяли ли.</span>
@@ -256,14 +263,14 @@
     </div>
 
     <div class="field-group">
-        <span class="hint">Даже если остался дома. На кого зарегистрирована симка, марка и модель. Если сим на заявителя - попросить взять выписку звонков. В сети ли сейчас телефон. Когда был в сети в последний раз. Спрашиваем все номера.</span>
+        <span class="hint">Даже если остался дома. Операто симки, на кого зарегистрирована симка, марка и модель телефона. Если сим на заявителя - попросить взять выписку звонков. В сети ли сейчас телефон. Когда был в сети в последний раз. Спрашиваем все номера.</span>
         <label>Телефон БВП:</label>
         <div id="g_namber" class="editable-field q-field q-global" contenteditable="true" data-p="Телефон БВП: " oninput="syncField(this)"></div>
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
     </div>
 
     <div class="field-group">
-        <span class="hint">Где, с кем и сколько проживает/зарегистрирован{a}/пропал{a}.</span>
+        <span class="hint">Где, с кем и сколько проживает/зарегистрирован{a}/пропал{a}. (город, район, улица, № дома, для многоквартирных домов – также № квартиры, № подъезда, № этажа) </span>
         <label>Проживает/прописан{a}/пропал{a}:</label>
         <div id="g_adress" class="editable-field q-field q-global" contenteditable="true" data-p="Проживает/прописан{a}/пропал{a}: " oninput="syncField(this)"></div>
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
@@ -413,13 +420,6 @@
 </div>
 
 <div class="field-group">
-    <span class="hint">Не служит ли в армии в настоящий момент, не скрывается от службы. СВО.</span>
-    <label>Воинская обязанность:</label>
-    <div id="g_army" class="editable-field q-field q-global" contenteditable="true" data-p="Воинская обязанность: " oninput="syncField(this)"></div>
-    <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
-</div>
-
-<div class="field-group">
     <span class="hint">Курение, алкоголь (как часто, в одиночестве или с кем-то, дома или где-то), если может уйти в запой – на как долго, выходит самостоятельно или с помощью, наркотики.</span>
     <div id="g_risks" class="editable-field q-field q-global" contenteditable="true" data-p="" oninput="syncField(this)" placeholder="Вредные привычки..."></div>
     <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
@@ -433,7 +433,7 @@
 </div>
 
 <div class="field-group">
-    <span class="hint">Согласие на ориентировки, указание медпомощи (если необходимо). Объяснить, что информация будет размещена в интернете. </span>
+    <span class="hint">Согласие на ориентировки, указание медпомощи (если необходимо). Объяснить, что информация будет размещена в интернете. Попросить прислать фото БВП. </span>
     <label>Согласие на орки:</label>
     <div id="g_miss" class="editable-field q-field q-global" contenteditable="true" data-p="Согласие на орки: " oninput="syncField(this)"></div>
     <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
