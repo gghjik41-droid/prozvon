@@ -219,6 +219,13 @@
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
     </div>
 
+	 <div class="field-group">
+        <span class="hint">Не служит ли в армии в настоящий момент, не скрывается от службы. СВО.</span>
+        <label>Воинская обязанность:</label>
+        <div id="g_army" class="editable-field q-field q-global" contenteditable="true" data-p="Воинская обязанность: " oninput="syncField(this)"></div>
+        <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
+    </div>
+	
 	   <div class="field-group">
         <span class="hint">Диагнозы, медикаменты, слух/зрение/ходьба, ориентирование во времени и пространстве, память.</span>
         <label>Здоровье:</label>
@@ -307,12 +314,6 @@
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
     </div>
 
-    <div class="field-group">
-        <span class="hint">Не служит ли в армии в настоящий момент, не скрывается от службы. СВО.</span>
-        <label>Воинская обязанность:</label>
-        <div id="g_army" class="editable-field q-field q-global" contenteditable="true" data-p="Воинская обязанность: " oninput="syncField(this)"></div>
-        <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
-    </div>
 
     <div class="field-group">
         <span class="hint">Курение, алкоголь (как часто, в одиночестве или с кем-то, дома или где-то), если может уйти в запой – на какой срок, выходит самостоятельно или с помощью, наркотики – если да, какие, как часто, где берет.</span>
@@ -320,8 +321,9 @@
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
     </div>
 
-    <div class="field-group">
+	<div class="field-group">
         <span class="hint">Согласие на ориентировки, указание медпомощи (если необходимо). Объяснить, что информация будет размещена в интернете.</span>
+        <span class="hint"><strong>ПРОСИМ ПРИСЛАТЬ ФОТО БВП</strong></span>
         <label>Согласие на орки:</label>
         <div id="g_miss" class="editable-field q-field q-global" contenteditable="true" data-p="Согласие на орки: " oninput="syncField(this)"></div>
         <a class="add-field-btn" onclick="addNewField(this)">[+] ДОБАВИТЬ поле вне вопроса</a>
