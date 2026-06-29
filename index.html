@@ -4,758 +4,661 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Опросники</title>
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="favicon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
-    <link rel="manifest" href="manifest.json">
+    <style>
+        /* БЛОКИРОВКА ГОРИЗОНТАЛЬНОГО СКРОЛЛА И ЗУМА */
+        html { overflow-x: hidden; overscroll-behavior-x: none; width: 100%; height: 100%; }
+        *, *::before, *::after { box-sizing: border-box; }
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Опросники">
+        /* ОСНОВНОЙ ВИЗУАЛ (Отступы обнулены) */
+        body { 
+            font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #eceff1; 
+            min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; 
+            touch-action: manipulation; position: relative; width: 100%; -webkit-tap-highlight-color: transparent; 
+        }
 
-    <script data-goatcounter="https://gghjik41.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+        /* ШАПКА И НАВИГАЦИЯ */
+        .header-nav { 
+            background-color: #37474f; padding: calc(2px + env(safe-area-inset-top, 0px)) 5px 2px 5px; 
+            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1000; position: fixed; top: 0; left: 0; right: 0; 
+            min-height: 38px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; 
+        }
+        .header-nav::-webkit-scrollbar { display: none; }
 
-	<style>
-			/* БЛОКИРОВКА ГОРИЗОНТАЛЬНОГО СКРОЛЛА И ЗУМА */
-			html {
-				/* Запрещаем прокрутку вбок на корню */
-				overflow-x: hidden; 
-				/* Запрещаем "резиновый" отскок (bounce эффект) в веб-приложении */
-				overscroll-behavior-x: none; 
-				width: 100%;
-				height: 100%;
-			}
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .clear-btn, .pin-btn { width: 28px; height: 28px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; color: white;}
+        .clear-btn { background-color: #b71c1c; }
+        .pin-btn { background-color: #546e7a; }
+        .pin-btn.active { background-color: #0288d1; }
+        .nav-btn { background-color: #455a64; color: #cfd8dc; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; text-transform: uppercase; white-space: nowrap; transition: 0.2s; }
+        .nav-btn.active { background-color: #00c853; color: #fff; }
 
-			/* Применяем правила ко всем элементам для предотвращения распирания */
-			*, *::before, *::after {
-				box-sizing: border-box;
-			}
+        /* КОНТЕЙНЕРЫ КОЛОНОК (Компактные отступы) */
+        .main-wrapper { 
+            display: flex; width: 100%; padding: 4px; padding-right: 8px; 
+            margin-top: calc(42px + env(safe-area-inset-top, 0px)); gap: 6px; box-sizing: border-box; align-items: flex-start; 
+        }
+        .form-side { flex: 0 0 55%; background: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 6px; box-sizing: border-box; position: relative; }
+        .result-side { flex: 0 0 45%; display: flex; flex-direction: column; gap: 4px; position: relative; }
 
-			/* ОСНОВНОЙ ВИЗУАЛ */
-			body { 
-				font-family: 'Segoe UI', sans-serif; 
-				margin: 0; 
-				padding: 0; 
-				/* УБРАНО: padding-top удален, чтобы не было серой полосы сверху */
-				background-color: #eceff1; 
-				min-height: 100vh; 
-				display: flex; 
-				flex-direction: column; 
-				overflow-y: auto; 
-				overflow-x: hidden; 
-				touch-action: manipulation; 
-				position: relative;
-				width: 100%;
-				-webkit-tap-highlight-color: transparent;
-			}
+        /* ВЕРСТКА БЛОКА ЗАЯВКИ */
+        .sticky-header { background: white; padding: 4px; border-bottom: 2px solid #eee; position: fixed; top: calc(42px + env(safe-area-inset-top, 0px)); left: 4px; width: calc(55% - 7px); z-index: 999; box-sizing: border-box; border-radius: 4px 4px 0 0; box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1); }
+        .sticky-header.unpinned { position: static !important; width: 100% !important; padding: 0 0 6px 0; margin-bottom: 8px; box-shadow: none; border-radius: 0; }
+        #z_text { width: 100%; min-height: 60px; padding: 6px; box-sizing: border-box; border: 1px solid #cfd8dc; border-radius: 4px; font-family: inherit; font-size: 14px; resize: vertical; line-height: 1.3em; outline: none; }
+        #z_text:focus { border-color: #4caf50; }
+        #z_fixed { background: #f1f8e9; padding: 6px; border-radius: 4px; border: 1px solid #c8e6c9; line-height: 1.3em; font-size: 12px; color: #1b5e20; white-space: normal; }
+        .btn-ok { margin-top: 4px; background: #4caf50; color: white; border: none; border-radius: 4px; padding: 6px; width: 100%; cursor: pointer; font-weight: bold; font-size: 13px;}
 
-			/* Принудительно ограничиваем все крупные блоки */
-			.master-container, #master-sticky, .nav-container, .main-wrapper {
-				max-width: 100vw;
-				overflow-x: hidden;
-			}
+        /* ВЕРСТКА ОПРОСНИКА (Минимализм) */
+        h2 { margin-top: 0; color: #211e1e; border-bottom: 2px solid #3b3535; padding-bottom: 8px; font-size: 18px; text-transform: uppercase; margin-bottom: 15px; }
+        .field-group { margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 6px; position: relative; box-sizing: border-box; }
+        .hint { font-size: 11px; color: #2e7d32; margin-bottom: 4px; display: block; line-height: 1.2; background: #f1f8e9; padding: 3px 6px; border-left: 3px solid #4caf50; white-space: pre-wrap; }
+        label { display: block; font-weight: 700; margin-bottom: 2px; font-size: 12px; color: #263238; text-decoration: underline; }
+        
+        input, .editable-field, textarea { width: 100%; padding: 6px 8px; border: 1px solid #cfd8dc; border-radius: 4px; box-sizing: border-box; font-size: 14px; background: #fafafa; display: block; outline: none; transition: all 0.3s ease; }
+        input:focus, .editable-field:focus, textarea:focus { border-color: #4caf50; background: #fff; }
+        
+        .editable-field { min-height: 30px; line-height: 1.3; white-space: pre-wrap; overflow-wrap: break-word; cursor: text; }
+        .editable-field:empty:before { content: attr(placeholder); color: #999; }
+        
+        .gender-toggle { display: flex; height: 26px; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; margin-top: 2px; }
+        .gender-btn { border: none; background: #eceff1; color: #546e7a; cursor: pointer; padding: 0 8px; font-weight: bold; font-size: 11px; transition: all 0.2s; }
+        .gender-btn.active { background: #4caf50; color: white; }
+        .gender-btn:first-child { border-right: 1px solid #ccc; }
+        
+        .add-field-btn { font-size: 11px; color: #1976d2; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 4px; font-weight: bold; }
+        .dynamic-field-wrapper { position: relative; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+        .dynamic-field { border-left: 3px dashed #1976d2 !important; background: #f9fbe7 !important; flex-grow: 1; }
+        .remove-btn { color: #f44336; cursor: pointer; font-weight: bold; font-size: 18px; padding: 0 4px; user-select: none; }
 
-			/* ШАПКА И НАВИГАЦИЯ */
-			.header-nav { 
-				background-color: #37474f; 
-				/* env оставляем ТОЛЬКО тут, чтобы шапка закрасила зону статус-бара */
-				padding: calc(4px + env(safe-area-inset-top, 0px)) 8px 4px 8px; 
-				display: grid; 
-				grid-template-columns: 1fr auto 1fr; 
-				align-items: center; 
-				gap: 10px; 
-				box-shadow: 0 2px 10px rgba(0,0,0,0.3); 
-				z-index: 1000; 
-				position: fixed; 
-				top: 0; 
-				left: 0; 
-				right: 0; 
-				height: auto;
-				min-height: 40px; 
-				overflow-x: auto; 
-				white-space: nowrap; 
-				scrollbar-width: none; 
-				touch-action: pan-x;
-				overscroll-behavior-x: contain;
-			}
-			.header-nav::-webkit-scrollbar { display: none; }
+        /* ВЫДАЧА РЕЗУЛЬТАТА (Правая колонка) */
+        .btn-copy { background-color: #1976d2; color: white; border: none; padding: 10px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; position: fixed; top: calc(42px + env(safe-area-inset-top, 0px)); right: 8px; width: calc(45% - 8px); z-index: 1001; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; transition: 0.3s; font-size: 12px;}
+        #output { width: calc(45% - 8px); position: fixed; top: calc(85px + env(safe-area-inset-top, 0px)); right: 8px; bottom: 4px; overflow-y: auto; background: white; padding: 6px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); font-size: 12px; color: #263238; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.15; scrollbar-width: none; }
+        #output::-webkit-scrollbar { display: none; }
+        
+        .res-row { margin-bottom: 2px; display: block; transition: background-color 0.3s ease; border-left: 3px solid transparent; cursor: pointer; padding: 2px 4px;}
+        .res-label { font-weight: 800; color: #1565c0; text-transform: uppercase; font-size: 11px; margin-right: 4px; }
+        .res-value { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #000; font-size: 12.5px; font-weight: 500; white-space: pre-wrap; line-height: 1.15; }
+        .res-row:hover { background-color: #f1f8e9; }
+        .res-row.active-focus { background-color: #fff9c4; border-left: 3px solid #00c853; }
+        .section-title {
+            background: #ffffff;
+            color: #211e1e;
+            padding: 8px 0;
+            border-top: 3px solid #37474f;
+            border-bottom: 1px solid #cfd8dc;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 20px 0 12px 0;
+            letter-spacing: 1px;
+            display: block;
+        }
 
-			/* КНОПКИ УПРАВЛЕНИЯ */
-			.clear-btn { background-color: #b71c1c; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-			.pin-btn { background-color: #546e7a; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-			.pin-btn.active { background-color: #0288d1; }
-			.nav-btn { background-color: #455a64; color: #cfd8dc; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase; white-space: nowrap; }
-			.nav-btn.active { background-color: #00c853; color: #fff; }
-
-			/* КОНТЕЙНЕРЫ */
-			.main-wrapper { 
-				display: flex; 
-				width: 100%; 
-				padding: 5px; 
-				padding-right: 20px; 
-				/* Опускаем контент под фиксированную шапку (48px + запас на env) */
-				margin-top: calc(48px + env(safe-area-inset-top, 0px)); 
-				gap: 10px; 
-				box-sizing: border-box; 
-				align-items: flex-start;
-			}
-				
-			.form-side { 
-				flex: 0 0 55%; 
-				background: white; 
-				border-radius: 4px; 
-				box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
-				padding: 5px; 
-				box-sizing: border-box; 
-				position: relative; 
-			}
-			
-			.result-side { 
-				flex: 0 0 45%; 
-				display: flex; 
-				flex-direction: column; 
-				gap: 8px; 
-				position: relative; 
-			}
-
-			/* ЛИПКАЯ ЗАЯВКА */
-			.sticky-header { 
-				background: white; 
-				padding: 3px 5px; 
-				border-bottom: 2px solid #eee; 
-				position: fixed; 
-				/* Прижимаем к низу шапки */
-				top: calc(48px + env(safe-area-inset-top, 0px)); 
-				left: 5px; 
-				width: calc(55% - 14px); 
-				z-index: 999; 
-				box-sizing: border-box; 
-				border-radius: 4px 4px 0 0; 
-				box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1); 
-			}
-			.sticky-header.unpinned { position: static !important; width: 100% !important; padding: 0 0 8px 0; margin-bottom: 10px; box-shadow: none; }
-
-			/* ЭЛЕМЕНТЫ ВВОДА */
-			#z_text {
-				width: 100%;
-				min-height: 75px;
-				padding: 10px;
-				box-sizing: border-box;
-				border: 1px solid #cfd8dc;
-				border-radius: 4px;
-				font-family: inherit;
-				font-size: 16px;
-				resize: vertical; 
-				line-height: 1.4em; 
-			}
-			
-			#z_fixed { 
-				display: none; 
-				background: #f1f8e9; 
-				padding: 5px; 
-				border-radius: 6px; 
-				border: 1px solid #c8e6c9; 
-				line-height: 1.4em; 
-				font-size: 12px; 
-				color: #1b5e20; 
-				white-space: normal; 
-			}
-			
-			.btn-ok { margin-top: 6px; background: #4caf50; color: white; border: none; border-radius: 4px; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
-			#survey-frame { width: 100%; height: auto; min-height: 300px; border: none; display: block; overflow: hidden !important; margin-top: 140px; }
-
-			/* ВЫДАЧА РЕЗУЛЬТАТА */
-			.btn-copy { 
-				background-color: #1976d2; 
-				color: white; 
-				border: none; 
-				padding: 12px 15px; 
-				border-radius: 4px; 
-				font-weight: bold; 
-				cursor: pointer; 
-				text-transform: uppercase; 
-				position: fixed; 
-				/* Тоже выравниваем под шапку */
-				top: calc(48px + env(safe-area-inset-top, 0px)); 
-				right: 10px; 
-				width: calc(45% - 10px); 
-				z-index: 1001; 
-				box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-				display: flex; 
-				justify-content: space-between; 
-				align-items: center; 
-			}
-
-			#output { 
-				width: calc(45% - 10px); 
-				position: fixed;
-				top: calc(95px + env(safe-area-inset-top, 0px)); 
-				right: 10px;
-				bottom: 5px; 
-				height: auto; 
-				max-height: none; 
-				overflow-y: auto; 
-				box-sizing: border-box; 
-				background: white; 
-				padding: 5px; 
-				border-radius: 4px; 
-				box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
-				border: none; 
-				font-family: 'Segoe UI', sans-serif; 
-				font-size: 13px; 
-				white-space: pre-wrap; 
-				color: #263238; 
-				line-height: 1.3; 
-				scrollbar-width: none; 
-				-ms-overflow-style: none; 
-			}
-
-			#output::-webkit-scrollbar { display: none; }
-
-			.res-row { margin-bottom: 2px; display: block; transition: background-color 0.3s ease; border-left: 3px solid transparent; }
-			.res-label { font-weight: 800; color: #1565c0; text-transform: uppercase; font-size: 11px; margin-right: 4px; }
-			.res-value { 
-				/* Добавляем современные системные шрифты перед monospace */
-				font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace; 
-				color: #000; 
-				font-size: 13px; 
-				font-weight: 500; /* Немного увеличим плотность для читаемости на экранах */
-			}
-
-			.res-row.active-focus {
-				background-color: #fff9c4;
-				border-left: 3px solid #00c853;
-				padding-left: 4px;
-			}
-
-			@media (max-width: 900px) { 
-				.main-wrapper { 
-					flex-direction: column; 
-					padding: 3px; 
-					margin-top: calc(50px + env(safe-area-inset-top, 0px)); 
-					overflow-x: hidden; 
-				} 
-
-				.form-side { 
-					padding: 4px !important; 
-					flex: 0 0 100%; 
-					width: 100%; 
-					position: static; 
-					box-shadow: none; 
-				}
-
-				.result-side { 
-					flex: 0 0 100%; 
-					width: 100%; 
-					position: static; 
-					padding: 4px; 
-				} 
-
-				.sticky-header { 
-					position: static !important; 
-					width: 100% !important; 
-					padding: 0 0 8px 0; 
-				} 
-
-				#survey-frame { margin-top: 0 !important; } 
-
-				.btn-copy { 
-					position: static; 
-					width: 100%; 
-					margin-bottom: 8px; 
-					box-sizing: border-box; 
-				} 
-
-				#output { 
-					position: static; 
-					width: 100%; 
-					margin-top: 0; 
-					transform: none !important; 
-					max-height: none; 
-				}
-
-				#master-pin-btn { display: none !important; }
-			}
-
-			/* ЭКРАН ЗАГРУЗКИ (Loader) */
-			#loader-wrapper {
-				position: fixed;
-				top: 0; left: 0;
-				width: 100%; height: 100%;
-				background-color: #37474f;
-				display: flex;
-				flex-direction: column;
-				justify-content: center;
-				align-items: center;
-				z-index: 9999;
-				transition: opacity 0.4s ease, visibility 0.4s ease;
-			}
-			.loader {
-				width: 45px; height: 45px;
-				border: 4px solid #cfd8dc;
-				border-top: 4px solid #00c853;
-				border-radius: 50%;
-				animation: loader-spin 1s linear infinite;
-			}
-			.loader-text {
-				margin-top: 15px;
-				color: white;
-				font-size: 13px;
-				font-weight: bold;
-				letter-spacing: 1px;
-				text-transform: uppercase;
-				/* Учитываем safe-area на случай если текст прижмет к челке */
-				padding-top: env(safe-area-inset-top, 0px);
-			}
-			@keyframes loader-spin {
-				0% { transform: rotate(0deg); }
-				100% { transform: rotate(360deg); }
-			}
-			.loader-hidden { opacity: 0; visibility: hidden; }
-		</style>
+        /* АДАПТИВНОСТЬ ДЛЯ ТЕЛЕФОНОВ */
+        @media (max-width: 900px) { 
+            .main-wrapper { flex-direction: column; padding: 4px; margin-top: calc(42px + env(safe-area-inset-top, 0px)); } 
+            .form-side, .result-side { flex: 0 0 100%; width: 100%; position: static; box-shadow: none; padding: 4px;}
+            .sticky-header { position: static !important; width: 100% !important; padding: 0 0 6px 0; border-radius: 0; box-shadow: none; }
+            .btn-copy { position: static; width: 100%; margin-bottom: 6px; } 
+            #output { position: static; width: 100%; margin-top: 0; max-height: none; }
+            #master-pin-btn { display: none !important; }
+        }
+    </style>
+<link rel="stylesheet" href="/index.css">
 </head>
-<body>
+<body x-data="psoApp()" x-init="initApp()" @resize.window="updateStickyOffset()">
 
-<div id="loader-wrapper">
-    <div class="loader"></div>
-    <div class="loader-text">Загрузка опросников...</div>
-</div>
-
-<div class="header-nav" id="menu">
-    <div style="display: flex; gap: 5px; justify-self: start;">
-        <button class="clear-btn" onclick="clearAllData()" title="Полная очистка">✕</button>
-        <button class="pin-btn active" id="master-pin-btn" onclick="togglePin()" title="Закрепить/открепить шапку заявки">📌</button>
-    </div>
-
-    <div style="display: flex; gap: 5px; justify-content: center;">
-        <button class="nav-btn active" onclick="openSurvey('short.html', this)">Короткий</button>
-        <button class="nav-btn" onclick="openSurvey('elderly.html', this)">Старики</button>
-        <button class="nav-btn" onclick="openSurvey('teens.html', this)">Подростки</button>
-        <button class="nav-btn" onclick="openSurvey('forest.html', this)">Лес</button>
-        <button class="nav-btn" onclick="openSurvey('adults.html', this)">Взрослые</button>
-    </div>
-
-    <div style="display: flex; gap: 5px; justify-self: end; padding-right: 10px;">
-        <button class="nav-btn" onclick="exportToJson()" title="Выгрузить JSON">💾</button>
-        <button class="nav-btn" onclick="document.getElementById('import-file').click()" title="Загрузить JSON">📂</button>
-        <input type="file" id="import-file" style="display:none" onchange="importFromJson(this)" accept=".json">
-    </div>
-</div>
-
-<div class="main-wrapper">
-    <div class="form-side">
-        <div class="sticky-header" id="master-sticky">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <label style="font-weight: bold; text-decoration: underline; font-size: 13px; color: #37474f;">ЗАЯВКА</label>
-                <button id="z_edit_btn" onclick="editZ()" style="display: none; background: #90a4ae; color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 10px; cursor: pointer;">ИЗМЕНИТЬ</button>
-            </div>
-            <textarea id="z_text" placeholder="Вставьте текст заявки..."></textarea>
-            <div id="z_fixed"><div id="z_value"></div></div>
-            <button id="z_confirm_btn" class="btn-ok" onclick="fixZ()">ОК</button>
+    <div class="header-nav" id="menu">
+        <div style="display: flex; gap: 4px; justify-self: start;">
+            <button class="clear-btn" @click="clearAllData()" title="Полная очистка">✕</button>
+            <button id="master-pin-btn" :class="isPinned ? 'pin-btn active' : 'pin-btn'" @click="togglePin()" title="Закрепить/открепить шапку заявки">📌</button>
         </div>
-        <iframe src="short.html?v=21" id="survey-frame" scrolling="no"></iframe>
+        <div style="display: flex; gap: 4px; justify-content: center;">
+            <template x-for="tab in tabs" :key="tab.id">
+                <button :class="currentTab === tab.id ? 'nav-btn active' : 'nav-btn'" 
+                        @click="switchTab(tab.id)" 
+                        x-text="tab.name"></button>
+            </template>
+        </div>
+        <div style="display: flex; gap: 4px; justify-self: end; padding-right: 4px;">
+            <button class="nav-btn" @click="exportData()" title="Выгрузить JSON">💾</button>
+            <button class="nav-btn" @click="$refs.importFile.click()" title="Загрузить JSON">📂</button>
+            <input type="file" x-ref="importFile" style="display:none" @change="importData($event)" accept=".json">
+        </div>
     </div>
 
-    <div class="result-side">
-        <button class="btn-copy" id="copy-btn" onclick="copyText()">
-            <span>Скопировать результат</span>
-            <span id="save-status">Обновлено: --:--:--</span>
-        </button>
-        <div id="output">Результат опроса появится здесь...</div>
+    <div class="main-wrapper">
+        <div class="form-side">
+            
+            <div id="master-sticky" class="sticky-header" :class="{'unpinned': !isPinned}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label style="font-weight: bold; text-decoration: underline; font-size: 12px; color: #37474f;">ЗАЯВКА</label>
+                    <button x-show="!isZEditing" @click="editZ()" style="background: #90a4ae; color: white; border: none; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer;">ИЗМЕНИТЬ</button>
+                </div>
+                <textarea id="z_text" x-show="isZEditing" x-model="zData" @input="saveData()" placeholder="Вставьте текст заявки..."></textarea>
+                <div id="z_fixed" x-show="!isZEditing" x-html="formattedZData"></div>
+                <button class="btn-ok" x-show="isZEditing" @click="fixZ()">ОК</button>
+            </div>
+
+            <div :style="'padding-top: ' + formPaddingTop + 'px'">
+                
+                <h2 x-text="getSurveyTitle()"></h2>
+
+                <div class="field-group q-field" data-index="0"
+                     @focusin="scrollToResult(0)"
+                     @mouseenter="scrollToResult(0)">
+                    <label style="text-decoration: none; margin-bottom: 4px;">Позывной, дата и время прозвона:</label>
+                    <div style="display: flex; height: 32px; overflow: hidden; border: 1px solid #ccc; border-radius: 4px; background: #fafafa;">
+                        <input type="text" placeholder="Позывной" x-model="callName" @input="sync()" style="flex: 1; border: none; padding: 0 8px; height: 100%; outline: none; background: transparent; border-right: 1px solid #eee; border-radius: 0;">
+                        <input type="text" placeholder="Дата и время" x-model="callDate" @input="sync()" style="flex: 1.5; border: none; padding: 0 8px; height: 100%; outline: none; background: transparent; border-radius: 0;">
+                        <button type="button" @click="setCurrentTime()" title="Обновить время" style="width: 32px; height: 100%; background: #4caf50; color: white; border: none; border-left: 1px solid #ccc; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 0;">
+                            <span style="font-size: 12px;">▶</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <template x-for="(item, index) in currentConfig" :key="currentTab + '_' + item.id">
+                    <div>
+                        <!-- Section Divider -->
+                        <template x-if="index > 0 && currentConfig[index - 1].id === 'g_miss'">
+                            <div class="section-title">Специальная часть:</div>
+                        </template>
+
+                        <div class="field-group q-field" :id="'group_' + item.id" :data-index="index + 1"
+                             @focusin="scrollToResult(index + 1)"
+                             @mouseenter="scrollToResult(index + 1)">
+                            
+                            <span class="hint" x-show="item.custom_hint || db[item.id].default_hint" x-html="formatText(item.custom_hint || db[item.id].default_hint)"></span>
+                            
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                                <label x-show="db[item.id].label" x-html="formatText(db[item.id].label) + (item.id !== 'g_before' ? ':' : '')" style="margin-bottom: 0;"></label>
+                                
+                                <template x-if="db[item.id].has_gender_toggle">
+                                    <div class="gender-toggle">
+                                        <button type="button" :class="currentGender === 'm' ? 'gender-btn active' : 'gender-btn'" @click="setGender('m')">М</button>
+                                        <button type="button" :class="currentGender === 'f' ? 'gender-btn active' : 'gender-btn'" @click="setGender('f')">Ж</button>
+                                    </div>
+                                </template>
+
+                                <template x-if="item.id === 'g_adress'">
+                                    <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; margin-bottom: 0; user-select: none;">
+                                        <input type="checkbox" x-model="showAddressLabel" @change="sync()" style="width: 14px; height: 14px; margin: 0; cursor: pointer;" title="Включить/выключить лейбл вопроса">
+                                    </label>
+                                </template>
+                            </div>
+
+                            <div :id="'input_' + item.id" 
+                                 class="editable-field q-global" 
+                                 contenteditable="true" 
+                                 :placeholder="db[item.id].placeholder || 'Введите данные...'"
+                                 x-init="$el.innerHTML = getFieldValue(item.id)"
+                                 @input="onInput(item.id, $event.target.innerHTML)"></div>
+
+                            <template x-for="(extraField, eIdx) in (extraFields[item.id] || [])" :key="eIdx">
+                                <div class="dynamic-field-wrapper">
+                                    <div :id="'extra_' + item.id + '_' + eIdx"
+                                         class="editable-field dynamic-field" 
+                                         contenteditable="true" 
+                                         placeholder="Дополнительные данные..."
+                                         x-init="$el.innerHTML = extraField"
+                                         @input="onExtraInput(item.id, eIdx, $event.target.innerHTML)"></div>
+                                    <span class="remove-btn" @click="removeExtraField(item.id, eIdx)">×</span>
+                                </div>
+                            </template>
+
+                            <a class="add-field-btn" @click="addExtraField(item.id)">[+] ДОБАВИТЬ поле вне вопроса</a>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div class="result-side">
+            <button class="btn-copy" @click="copyReport()">
+                <span x-text="copyBtnText"></span>
+                <span id="save-status" x-text="lastUpdate"></span>
+            </button>
+            
+            <div id="output">
+                <template x-for="(row, idx) in reportData" :key="idx">
+                    <div class="res-row" :data-dom-index="row.domIndex" @click="scrollToField(row.domIndex)">
+                        <template x-if="row.isHeader">
+                            <span class="res-value" style="font-weight:bold; display:block; margin-bottom:12px; font-size:1.05em; border-bottom:1px solid #444; padding-bottom:4px;" x-text="row.value"></span>
+                        </template>
+                        <template x-if="!row.isHeader">
+                            <div>
+                                <span class="res-label" x-show="row.label" x-text="row.label + (row.label.trim() === 'Накануне' ? '' : ':')"></span>
+                                <span class="res-value" x-text="row.value"></span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
-</div>
 
-<script>
-    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
-    var ORDER = ['short', 'elderly', 'teens', 'forest', 'adults']; 
-    var globalZData = localStorage.getItem('pso_z_main') || "";
-    var globalCallsignData = localStorage.getItem('pso_global_callsign_data') || ""; 
-    var globalFields = JSON.parse(localStorage.getItem('pso_global_fields') || "{}"); 
+    <script>
+        function psoApp() {
+            return {
+                tabs: [
+                    { id: 'short', name: 'Короткий' },
+                    { id: 'elderly', name: 'Старики' },
+                    { id: 'teens', name: 'Подростки' },
+                    { id: 'forest', name: 'Лес' },
+                    { id: 'adults', name: 'Взрослые' }
+                ],
+                currentTab: 'short',
+                currentGender: 'm',
+                callName: '',
+                callDate: '',
+                zData: '',
+                isZEditing: true,
+                isPinned: true,
+                formPaddingTop: 0,
+                fields: {}, 
+                extraFields: {}, 
+                reportData: [], 
+                lastUpdate: 'Обновлено: --:--',
+                copyBtnText: 'СКОПИРОВАТЬ РЕЗУЛЬТАТ',
+                showAddressLabel: true,
 
-    var currentSource = localStorage.getItem('last_survey_file') ? localStorage.getItem('last_survey_file').replace('.html', '') : 'short';
-    var scrollTimeout;
+                genderDict: {
+                    'm': { '{a}': '', '{а}': '', '{ла}': '', '{love}': 'девушка', '{ела}': 'ел' },
+                    'f': { '{a}': 'а', '{а}': 'а', '{ла}': 'ла', '{love}': 'парень', '{ела}': 'ла' }
+                },
 
-    /**
-     * Показывает или скрывает экран загрузки
-     */
-    function toggleLoader(show) {
-        const loader = document.getElementById('loader-wrapper');
-        if (loader) {
-            if (show) loader.classList.remove('loader-hidden');
-            else loader.classList.add('loader-hidden');
-        }
-    }
+                db: {
+                    "g_name": { "label": "Прозвон заявителя", "placeholder": "Введите данные заявителя...", "default_hint": "ФИО заявителя, номер телефона в формате 81110000000, родство, доп. номер для связи." },
+                    "g_fio": { "label": "Пропал{a}", "has_gender_toggle": true, "default_hint": "ФИО БВП (любая смена ФИО), дата рождения, возраст. Сверяем письменно!" },
+                    "g_event": { "label": "", "placeholder": "Обстоятельства...", "default_hint": "Коротко об обстоятельствах: дата, время, адрес пропажи (город, район, улица, № дома, № подъезда, № квартиры)" },
+                    "g_army": { "label": "Воинская обязанность", "default_hint": "Не служит ли в армии в настоящий момент, не скрывается от службы, СВО." },
+                    "g_health": { "label": "Здоровье", "default_hint": "Диагнозы, медикаменты, слух/зрение/ходьба, ориентирование во времени и пространстве, память." },
+                    "g_body": { "label": "Приметы", "default_hint": "Рост, телосложение, цвет и длина волос, цвет глаз, носит ли бороду/усы/очки." },
+                    "g_special": { "label": "Особые", "default_hint": "Есть ли шрамы, тату, заметные родинки/родимые пятна, особенности зубов, походки, отсутствие пальцев и т. д." },
+                    "g_clothes": { "label": "Одежда", "default_hint": "Что было надето/обувь/головной убор (цвет, материал, надписи)" },
+                    "g_with": { "label": "С собой", "default_hint": "Что с собой (паспорт, наличные деньги, банковские карты, проездные, ключи, украшения), если нет, так и пишем «паспорт – нет, наличные - нет» и т.д." },
+                    "g_namber": { "label": "Телефон БВП", "default_hint": "Даже если остался дома. Оператор симки, на кого зарегистрирована симка, марка и модель телефона. Если сим на заявителя - попросить взять выписку звонков. В сети ли сейчас телефон. Когда был в сети в последний раз. Спрашиваем все номера." },
+                    "g_adress": { "label": "Проживает/прописан{a}/пропал{a}", "default_hint": "Где, с кем и сколько проживает/зарегистрирован{a}/пропал{a}." },
+                    "g_last": { "label": "", "placeholder": "Ранее...", "default_hint": "Пропадал{a} ли ранее, когда/как и где находили." },
+                    "g_eventfull": { "label": "Подробности", "default_hint": "ОБСТОЯТЕЛЬСТВА ПРОПАЖИ ПОДРОБНО. Дата и время пропажи (во сколько стал недоступен/не отвечать на тел)! Что предпринимали для поиска (были на месте пропажи, звонили куда-то, кому-то)." },
+                    "g_police": { "label": "ЗВП", "default_hint": "Полиция: ФИО заявителя, ОВД, контакты. Оговариваем срок подачи заявление в полицию до 3-х суток от момента поступлении заявки, в противном случае мы вынуждены будем отказать в поиске." },
+                    "g_family": { "label": "Семья", "default_hint": "Семейное положение/ситуация в семье/предыдущие браки/дети от прошлых браков/близкие родственники/к кому мог поехать/знают ли они о пропаже. Родственники в других городах." },
+                    "g_soc": { "label": "Соцсети", "default_hint": "Ссылки на профили, никнеймы." },
+                    "g_home": { "label": "", "placeholder": "Прежние адреса...", "default_hint": "Места жительства текущие и прежние, куда мог поехать." },
+                    "g_garage": { "label": "Другая недвижимость", "default_hint": "Есть ли дача/гараж/и т.д, как часто там бывает, как добирается." },
+                    "g_place": { "label": "Места привязки", "default_hint": "Места, где часто бывает БВП." },
+                    "g_way": { "label": "Маршруты", "default_hint": "Маршруты обычные/виды транспорта/есть ли автомобиль/где он/где ключи/документы." },
+                    "g_work": { "label": "Работа", "default_hint": "Работа где/кем/график работы/как давно тут работает/предыдущие места работы, в курсе ли о пропаже коллеги." },
+                    "g_hobby": { "label": "Свободное время", "default_hint": "Отдых/что делает в свободное время/интересы/увлечения." },
+                    "g_friends": { "label": "Круг общения", "default_hint": "Коллеги, друзья, знакомые." },
+                    "g_character": { "label": "Характер", "default_hint": "Особенности поведения, коммуникабельность, реакция на незнакомцев/на предложение помощи." },
+                    "g_god": { "label": "Религия", "default_hint": "Отношение к религии." },
+                    "g_before": { "label": "Накануне", "default_hint": "Что изменилось накануне пропажи: ссоры, конфликты, необычное." },
+                    "g_low": { "label": "Проблемы с законом", "default_hint": "Проблемы с законом" },
+                    "g_money": { "label": "Кредиты/долги", "default_hint": "Кредиты/долги" },
+                    "g_death": { "label": "Суицид", "default_hint": "Мысли о суициде – если нет, подробно, что дословно сказал заявитель, если да, из-за чего, как давно, что говорит о причинах, были ли ранее попытки/когда/способ, что говорит о способе/месте/времени." },
+                    "g_risks": { "label": "", "placeholder": "Вредные привычки...", "default_hint": "Курение, алкоголь (как часто, в одиночестве или с кем-то, дома или где-то), если может уйти в запой – на какой срок, выходит самостоятельно или с помощью, наркотики – если да, какие, как часто, где берет." },
+                    "g_contacts": { "label": "Контакты", "default_hint": "Контакты друзей/знакомых (обязательно хотя бы один доп. контакт для связи с заявителем!)" },
+                    "g_miss": { "label": "Согласие на орки", "default_hint": "Согласие на ориентировки, на указание \"нуждается в медпомощи\" (если необходимо). Объяснить, что информация будет размещена в интернете. ПРОСИМ ПРИСЛАТЬ ФОТО БВП" },
+                    "g_deathrel": { "label": "", "placeholder": "Погибшие родственники...", "default_hint": "Вспоминает ли кого-то из погибших родственников, где похоронены, как часто ездит на кладбище, стремится ли туда." },
+                    "g_want": { "label": "", "placeholder": "Куда просится...", "default_hint": "Куда стремится/просится/кого зовет/вспоминает." },
+                    "g_fears": { "label": "Страхи", "default_hint": "Чего боится." },
+                    "g_time": { "label": "Режим дня", "default_hint": "Обычный ритм жизни, режим дня, режим сна." },
+                    "g_gadgets": { "label": "Гаджеты", "default_hint": "Какой техникой пользуется, какая осталась дома (телефоны, планшеты, ноутбуки), если что-то осталось дома – есть ли у родителей к ней доступ." },
+                    "g_school": { "label": "", "placeholder": "Учеба...", "default_hint": "Где учится/прошлые места учебы. Как учится/есть ли проблемы/желание учиться." },
+                    "g_class": { "label": "", "placeholder": "Одноклассники...", "default_hint": "Взаимоотношения с одноклассниками и учителями." },
+                    "g_love": { "label": "", "placeholder": "Парень/девушка...", "default_hint": "Есть ли {love}." },
+                    "g_odn": { "label": "Учет ОДН", "default_hint": "Состоит ли на учете в ОДН." },
+                    "g_move": { "label": "", "placeholder": "Особенности передвижения...", "default_hint": "Использует ли для ходьбы трость или палку, скорость ходьбы, сколько может пройти по времени, по расстоянию." },
+                    "g_nickname": { "label": "Дома зовут", "placeholder": "Имя для отклика...", "default_hint": "Как зовут дома (работа на отклик)." },
+                    "g_alive": { "label": "", "placeholder": "Навыки выживания...", "default_hint": "Способность ориентироваться на местности. Навыки выживания. Что будет делать в ночное время суток: сможет развести костер, построить шалаш или лежанку." },
+                    "g_fores": { "label": "", "placeholder": "Знание леса...", "default_hint": "БВП знаком лес, в который он{a} уш{ела}? Как часто в него ходит?" },
+                    "g_berries": { "label": "", "placeholder": "Цель похода...", "default_hint": "За чем пош{ела} в лес. За какими грибами, ягодами ходит." },
+                    "g_spot": { "label": "", "placeholder": "На месте...", "default_hint": "Кто есть на месте пропажи и их контакты: родственники, полиция, ПСО" },
+                    "g_gate": { "label": "", "placeholder": "Шлагбаум/Проезд...", "default_hint": "Есть ли на въезде в СНТ/лес шлагбаум, камера, охрана. Можно ли проехать на пузотерке." }
+                },
 
-    /**
-     * Подстраивает верхний отступ фрейма (анкеты).
-     */
-    function adjustFrameOffset() {
-        var header = document.getElementById('master-sticky');
-        var frame = document.getElementById('survey-frame');
-        if (header && frame && !header.classList.contains('unpinned') && window.innerWidth > 900) {
-            frame.style.marginTop = (header.offsetHeight + 10) + 'px';
-        } else {
-            if (frame) frame.style.marginTop = '0px';
-        }
-    }
+                formsRepo: {
+                    "short": [ { "id": "g_name" }, { "id": "g_fio" }, { "id": "g_event" }, { "id": "g_army" }, { "id": "g_health" }, { "id": "g_body" }, { "id": "g_special" }, { "id": "g_clothes" }, { "id": "g_with" }, { "id": "g_namber" }, { "id": "g_adress" }, { "id": "g_last" }, { "id": "g_eventfull" }, { "id": "g_police" }, { "id": "g_low" }, { "id": "g_money" }, { "id": "g_death" }, { "id": "g_risks" }, { "id": "g_miss" } ],
+                    "adults": [ { "id": "g_name" }, { "id": "g_fio" }, { "id": "g_event" }, { "id": "g_army" }, { "id": "g_health" }, { "id": "g_body" }, { "id": "g_special" }, { "id": "g_clothes" }, { "id": "g_with" }, { "id": "g_namber" }, { "id": "g_adress" }, { "id": "g_last" }, { "id": "g_eventfull" }, { "id": "g_police" }, { "id": "g_miss" }, { "id": "g_family" }, { "id": "g_soc" }, { "id": "g_home" }, { "id": "g_garage" }, { "id": "g_place" }, { "id": "g_way" }, { "id": "g_work" }, { "id": "g_hobby" }, { "id": "g_friends" }, { "id": "g_character" }, { "id": "g_god" }, { "id": "g_before" }, { "id": "g_low" }, { "id": "g_money" }, { "id": "g_death" }, { "id": "g_risks" }, { "id": "g_contacts" } ],
+                    "forest": [ { "id": "g_name" }, { "id": "g_fio" }, { "id": "g_event" }, { "id": "g_army" }, { "id": "g_health" }, { "id": "g_move" }, { "id": "g_nickname" }, { "id": "g_body" }, { "id": "g_special" }, { "id": "g_clothes" }, { "id": "g_with", "custom_hint": "Что с собой (паспорт, наличные деньги, банковские карты, проездные, ключи, украшения, компас, навигатор, вода/еда, нож). Если с собой пакет, ведерко – обязательно их размер, цвет, подробное описание." }, { "id": "g_namber", "custom_hint": "На кого зарегистрирована симка, сотовый оператор, марка и модель телефона (кнопка или смартфон), когда заряжал{a}, как долго держит зарядку, как давно не отвечает на звонки или недоступен, если на связи – во сколько созванивались в прошлый раз, строго попросить больше не звонить, что дословно говорил{a} при последнем общении по телефону, узнать, какими мессенджерами пользуется." }, { "id": "g_adress" }, { "id": "g_last" }, { "id": "g_eventfull", "custom_hint": "ОБСТОЯТЕЛЬСТВА ПРОПАЖИ ПОДРОБНО. Когда ушел в лес, когда должен был вернуться, что говорил перед выходом, ближайшие снт, точка входа, координаты." }, { "id": "g_police" }, { "id": "g_miss" }, { "id": "g_place", "custom_hint": "Известно ли, куда он обычно ходит (может кто-то подробно описать это место, показать на месте)." }, { "id": "g_way", "custom_hint": "Как добирается до дачи (места входа в лес) – подробный маршрут, каким транспортом, пользуется ли соцкартой/проездным или покупает билет на станции. Если БВП на авто, необходимо выяснить: марку, номер и цвет автомобиля, где нашли автомобиль." }, { "id": "g_alive" }, { "id": "g_fores" }, { "id": "g_berries" }, { "id": "g_spot" }, { "id": "g_gate" }, { "id": "g_risks", "custom_hint": "Курение (марка сигарет, описание, есть ли с собой зажигалка), алкоголь (бывают ли запои), наркотики." } ],
+                    "teens": [ { "id": "g_name" }, { "id": "g_fio" }, { "id": "g_event" }, { "id": "g_health" }, { "id": "g_body" }, { "id": "g_special" }, { "id": "g_clothes" }, { "id": "g_with" }, { "id": "g_namber" }, { "id": "g_adress" }, { "id": "g_last" }, { "id": "g_eventfull" }, { "id": "g_police" }, { "id": "g_miss" }, { "id": "g_family", "custom_hint": "Какие отношения с братьями/сестрами/родителями/что разрешено ребенку, какие существуют запреты/очень осторожно - родные ли родители. Родственники в других городах." }, { "id": "g_soc" }, { "id": "g_gadgets" }, { "id": "g_place" }, { "id": "g_way" }, { "id": "g_school" }, { "id": "g_class" }, { "id": "g_hobby", "custom_hint": "Как проводит свободное время/где/увлечения/интересы/секции/кружки." }, { "id": "g_friends", "custom_hint": "Друзья, подруги, их контакты." }, { "id": "g_love" }, { "id": "g_odn" }, { "id": "g_time", "custom_hint": "Обычный распорядок дня/время посещения занятий/во сколько ложится спать." }, { "id": "g_character", "custom_hint": "Коммуникабельность, реакция на незнакомых людей/может ли уйти с незнакомым взрослым человеком." }, { "id": "g_before" }, { "id": "g_death" }, { "id": "g_risks", "custom_hint": "Курение, алкоголь, наркотики." }, { "id": "g_contacts" } ],
+                    "elderly": [ { "id": "g_name" }, { "id": "g_fio" }, { "id": "g_event" }, { "id": "g_army" }, { "id": "g_health", "custom_hint": "Диагнозы/медикаменты (что будет, если не принять). Есть ли инвалидность. Когда началось/как проявляется заболевание. Есть ли внешние проявления заболевания/странности поведения. Если проблемы с памятью – подробно, как проявляются, что помнит, что не помнит. Как ориентируется в пространстве. Как слышит/видит/ходит, ориентир во времени и пространстве. Назовет ли себя, свое фио, адрес, телефон родственников. Если да, проверяли ли." }, { "id": "g_body" }, { "id": "g_special" }, { "id": "g_clothes" }, { "id": "g_with" }, { "id": "g_namber" }, { "id": "g_adress" }, { "id": "g_last" }, { "id": "g_eventfull" }, { "id": "g_police" }, { "id": "g_miss" }, { "id": "g_family" }, { "id": "g_home", "custom_hint": "Все прежние места жительства (адрес, описание дома)." }, { "id": "g_garage", "custom_hint": "Есть ли дача/гараж/и т.д., как часто там бывает, знает ли дорогу, как добирается." }, { "id": "g_place", "custom_hint": "Передвигается ли самостоятельно (куда, каким способом, как часто) привычные маршруты, места привязки." }, { "id": "g_way", "custom_hint": "Умеет ли пользоваться общественным транспортом, маршруты, боится ли. Есть ли авто." }, { "id": "g_work", "custom_hint": "Прежние места работы. Кем, где, сколько уже не работает. Вспоминает ли о работе." }, { "id": "g_hobby" }, { "id": "g_friends" }, { "id": "g_deathrel" }, { "id": "g_want" }, { "id": "g_fears" }, { "id": "g_time" }, { "id": "g_character" }, { "id": "g_god" }, { "id": "g_before" }, { "id": "g_low" }, { "id": "g_money" }, { "id": "g_death" }, { "id": "g_risks" }, { "id": "g_contacts" } ]
+                },
 
-    /**
-     * Переключает состояние закрепления шапки (Pin).
-     */
-    function togglePin() {
-        var btn = document.getElementById('master-pin-btn');
-        var header = document.getElementById('master-sticky');
-        if (!btn || !header) return;
-        
-        var isActive = btn.classList.toggle('active');
-        header.classList.toggle('unpinned', !isActive);
-        localStorage.setItem('pso_header_pinned', isActive);
-        adjustFrameOffset();
-    }
+                get currentConfig() {
+                    return this.formsRepo[this.currentTab] || [];
+                },
 
-    /**
-     * Применяет изменения в поле "Z".
-     */
-    function fixZ() {
-        var val = document.getElementById('z_text').value; 
-        globalZData = val;
-        localStorage.setItem('pso_z_main', val);
-        if (val.trim() !== "") {
-            renderZ(val);
-        }
-    }
+                get formattedZData() {
+                    return this.zData.trim().split('\n').filter(l => l.trim() !== '').join(' | ');
+                },
 
-    /**
-     * Рендерит Z-текст.
-     */
-    function renderZ(text) {
-        var valDiv = document.getElementById('z_value');
-        if (!valDiv) return;
-        
-        var flatText = text.trim().split('\n')
-            .filter(line => line.trim() !== "") 
-            .join(' | '); 
-        
-        valDiv.innerText = flatText; 
+                fixZ() {
+                    if (this.zData.trim() !== "") this.isZEditing = false;
+                    this.sync();
+                    this.$nextTick(() => { this.updateStickyOffset(); });
+                },
 
-        document.getElementById('z_text').style.display = 'none';
-        document.getElementById('z_confirm_btn').style.display = 'none';
-        document.getElementById('z_fixed').style.display = 'block';
-        document.getElementById('z_edit_btn').style.display = 'block';
-        
-        setTimeout(adjustFrameOffset, 30);
-    }
-
-    /**
-     * Редактирование Z.
-     */
-    function editZ() {
-        var zInput = document.getElementById('z_text');
-        zInput.value = globalZData;
-        zInput.style.display = 'block';
-        document.getElementById('z_confirm_btn').style.display = 'block';
-        document.getElementById('z_fixed').style.display = 'none';
-        document.getElementById('z_edit_btn').style.display = 'none';
-        setTimeout(adjustFrameOffset, 30);
-    }
-
-    /**
-     * Передает данные внутрь <iframe>.
-     */
-    function broadcastData(call, fields) {
-        var frame = document.getElementById('survey-frame');
-        if (frame && frame.contentWindow) {
-            frame.contentWindow.postMessage({ type: 'set_global_data', value: call, fields: fields }, '*');
-        }
-    }
-
-    /**
-     * Переключает анкеты.
-     */
-    function openSurvey(fileName, btn) {
-        var frame = document.getElementById('survey-frame');
-        if (!frame) return;
-        
-        // НЕ показываем лоадер при переключении
-        <!-- toggleLoader(true); -->
-
-        currentSource = fileName.replace('.html', '');
-        frame.src = fileName;
-        var navBtns = document.querySelectorAll('.nav-btn');
-        navBtns.forEach(function(b) { b.classList.remove('active'); });
-        if (btn) btn.classList.add('active');
-        localStorage.setItem('last_survey_file', fileName);
-
-        frame.onload = function() {
-            broadcastData(globalCallsignData, globalFields);
-            adjustFrameOffset();
-            updateFinalOutput();
-            // Скрываем после прогрузки фрейма
-            setTimeout(() => toggleLoader(false), 200);
-        };
-    }
-
-    /**
-     * Полная очистка.
-     */
-    function clearAllData() {
-        if (confirm("Очистить все формы и результат?")) {
-            localStorage.clear();
-            location.reload();
-        }
-    }
-
-    /**
-     * Обновляет итоговый текстовый блок.
-     */
-    function updateFinalOutput() {
-        var outDiv = document.getElementById('output');
-        if (!outDiv) return;
-        outDiv.innerHTML = ""; 
-
-        var raw = localStorage.getItem('survey_text_' + currentSource);
-        if (raw) {
-            try {
-                var payload = JSON.parse(raw);
-                if (Array.isArray(payload)) {
-                    payload.forEach(function(item, index) {
-                        var row = document.createElement('div');
-                        row.className = 'res-row';
-                        row.id = 'row-' + currentSource + '-' + index;
-
-                        if (item.isHeader) {
-                            row.innerHTML = '<span class="res-value" style="font-weight:bold; display:block; margin-bottom:15px; font-size:1.1em; border-bottom:1px solid #444; padding-bottom:5px;">' + item.value + '</span>';
-                        } 
-                        else if (item.label && item.label.trim() !== "") {
-                            row.innerHTML = '<span class="res-label">' + item.label + ':</span> <span class="res-value">' + item.value + '</span>';
-                        } 
-                        else {
-                            row.innerHTML = '<span class="res-value">' + item.value + '</span>';
-                        }
-                        outDiv.appendChild(row);
+                editZ() {
+                    this.isZEditing = true;
+                    this.$nextTick(() => { 
+                        this.updateStickyOffset(); 
+                        document.getElementById('z_text').focus();
                     });
+                },
+
+                togglePin() {
+                    this.isPinned = !this.isPinned;
+                    this.$nextTick(() => { this.updateStickyOffset(); });
+                },
+
+                updateStickyOffset() {
+                    if (this.isPinned && window.innerWidth > 900) {
+                        let el = document.getElementById('master-sticky');
+                        if (el) this.formPaddingTop = el.offsetHeight + 6;
+                    } else {
+                        this.formPaddingTop = 0;
+                    }
+                },
+
+                initApp() {
+                    this.loadData();
+                    
+                    if (!this.callDate || this.callDate.trim() === "") {
+                        this.setCurrentTime();
+                    }
+                    if (this.zData.trim() !== "") {
+                        this.isZEditing = false;
+                    }
+
+                    this.sync();
+                    this.$nextTick(() => { this.updateStickyOffset(); });
+
+                    // ВОССТАНОВЛЕНА ФУНКЦИЯ ПЕРЕТАСКИВАНИЯ JSON-ФАЙЛА (Drag & Drop)
+                    window.addEventListener("dragover", (e) => e.preventDefault());
+                    window.addEventListener("drop", (e) => {
+                        e.preventDefault();
+                        if (e.dataTransfer.files.length > 0) {
+                            this.importData({ target: { files: e.dataTransfer.files, value: '' } });
+                        }
+                    });
+                },
+
+                getSurveyTitle() {
+                    const titles = { 'short': 'Короткий опросник', 'adults': 'Взрослые', 'forest': 'Лес', 'teens': 'Подростки', 'elderly': 'Старики' };
+                    return titles[this.currentTab] || '';
+                },
+
+                scrollToResult(index) {
+                    let targetRow = document.querySelector(`.res-row[data-dom-index="${index}"]`);
+                    let out = document.getElementById('output');
+                    if (targetRow && out) {
+                        const outRect = out.getBoundingClientRect();
+                        const rowRect = targetRow.getBoundingClientRect();
+                        const relativeTop = rowRect.top - outRect.top + out.scrollTop;
+                        out.scrollTo({
+                            top: relativeTop - 15,
+                            behavior: 'smooth'
+                        });
+                        document.querySelectorAll('.res-row').forEach(r => r.classList.remove('active-focus'));
+                        targetRow.classList.add('active-focus');
+                    }
+                },
+
+                switchTab(tabId) {
+                    this.currentTab = tabId;
+                    this.saveData();
+                    this.sync();
+                },
+
+                setCurrentTime() {
+                    let now = new Date();
+                    let d = String(now.getDate()).padStart(2, '0');
+                    let m = String(now.getMonth() + 1).padStart(2, '0');
+                    let y = now.getFullYear();
+                    let h = String(now.getHours()).padStart(2, '0');
+                    let min = String(now.getMinutes()).padStart(2, '0');
+                    this.callDate = `${d}.${m}.${y} ${h}:${min}`;
+                    this.sync();
+                },
+
+                setGender(sex) {
+                    this.currentGender = sex;
+                    this.sync();
+                },
+
+                formatText(text) {
+                    if (!text) return '';
+                    let result = text;
+                    let dict = this.genderDict[this.currentGender];
+                    for (let key in dict) { result = result.split(key).join(dict[key]); }
+                    return result;
+                },
+
+                getFieldValue(id) {
+                    return this.fields[id] || '';
+                },
+
+                onInput(id, html) {
+                    this.fields[id] = html;
+                    this.sync();
+                },
+
+                addExtraField(id) {
+                    if (!this.extraFields[id]) this.extraFields[id] = [];
+                    this.extraFields[id].push('');
+                    this.sync();
+                },
+
+                removeExtraField(id, eIdx) {
+                    this.extraFields[id].splice(eIdx, 1);
+                    this.sync();
+                },
+
+                onExtraInput(id, eIdx, html) {
+                    this.extraFields[id][eIdx] = html;
+                    this.sync();
+                },
+
+                sync() {
+                    this.saveData();
+                    let payload = [];
+                    
+                    let headerText = `${this.callName} ${this.callDate}`.trim();
+                    if (headerText) {
+                        payload.push({ isHeader: true, value: headerText, domIndex: 0 });
+                    }
+
+                    this.currentConfig.forEach((item, index) => {
+                        let el = document.getElementById('input_' + item.id);
+                        let mainText = el ? el.innerText.trim() : (this.fields[item.id] ? this.fields[item.id].replace(/<[^>]*>/g, '').trim() : '');
+                        
+                        let combined = mainText;
+                        let subTexts = this.extraFields[item.id] || [];
+                        
+                        subTexts.forEach((sub, eIdx) => {
+                            let elEx = document.getElementById('extra_' + item.id + '_' + eIdx);
+                            let cleanSub = elEx ? elEx.innerText.trim() : '';
+                            if (!cleanSub) {
+                                let temp = document.createElement('div');
+                                temp.innerHTML = sub;
+                                cleanSub = temp.innerText.trim();
+                            }
+                            if (cleanSub) combined += '\n' + cleanSub;
+                        });
+
+                        if (combined.trim()) {
+                            let cleanLabel = this.formatText(this.db[item.id].label).replace(/:$/, '').trim();
+                            if (item.id === 'g_adress' && !this.showAddressLabel) {
+                                cleanLabel = '';
+                            }
+                            payload.push({ label: cleanLabel, value: combined, domIndex: index + 1 });
+                        }
+                    });
+
+                    this.reportData = payload;
+                    let now = new Date();
+                    this.lastUpdate = "Обновлено: " + now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                },
+
+                saveData() {
+                    let cache = { 
+                        tab: this.currentTab, gender: this.currentGender, name: this.callName,
+                        date: this.callDate, zData: this.zData, isPinned: this.isPinned, 
+                        fields: this.fields, extra: this.extraFields, showAddressLabel: this.showAddressLabel
+                    };
+                    localStorage.setItem('pso_universal_app_v4', JSON.stringify(cache));
+                },
+
+                loadData() {
+                    let raw = localStorage.getItem('pso_universal_app_v4');
+                    if (!raw) return;
+                    try {
+                        let cache = JSON.parse(raw);
+                        if (cache.tab) this.currentTab = cache.tab;
+                        if (cache.gender) this.currentGender = cache.gender;
+                        if (cache.name) this.callName = cache.name;
+                        if (cache.date) this.callDate = cache.date;
+                        if (cache.zData) this.zData = cache.zData;
+                        if (cache.isPinned !== undefined) this.isPinned = cache.isPinned;
+                        if (cache.fields) this.fields = cache.fields;
+                        if (cache.extra) this.extraFields = cache.extra;
+                        if (cache.showAddressLabel !== undefined) this.showAddressLabel = cache.showAddressLabel;
+                    } catch(e) { console.error("Ошибка чтения кэша", e); }
+                },
+
+                clearAllData() {
+                    if (confirm("Вы уверены, что хотите удалить ВСЕ данные?")) {
+                        localStorage.removeItem('pso_universal_app_v4');
+                        location.reload();
+                    }
+                },
+
+                scrollToField(index) {
+                    let targetGroup = document.querySelector(`.q-field[data-index="${index}"]`);
+                    if (targetGroup) {
+                        targetGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        let inputField = targetGroup.querySelector('.q-global');
+                        if (inputField) {
+                            let oldTransition = inputField.style.transition;
+                            inputField.style.transition = 'all 0.3s ease';
+                            inputField.style.borderColor = '#4caf50'; 
+                            inputField.style.boxShadow = '0 0 8px rgba(76, 175, 80, 0.8)'; 
+                            
+                            setTimeout(() => {
+                                inputField.style.borderColor = '';
+                                inputField.style.boxShadow = '';
+                                setTimeout(() => inputField.style.transition = oldTransition, 300);
+                            }, 1200);
+                        }
+                        
+                        document.querySelectorAll('.res-row').forEach(r => r.classList.remove('active-focus'));
+                        let row = document.querySelector(`.res-row[data-dom-index="${index}"]`);
+                        if(row) row.classList.add('active-focus');
+                    }
+                },
+
+					copyReport() {
+                    let finalLinesText = [];
+                    let finalLinesHTML = [];
+                    
+                    this.reportData.forEach(row => {
+                        // Сжимаем множественные пустоты до одного аккуратного переноса
+                        let cleanValue = row.value.replace(/[\r\n]+/g, '\n').trim();
+                        if (!cleanValue) return;
+
+                        let textLine = "";
+                        let htmlLine = "";
+
+                        if (row.isHeader) {
+                            textLine = cleanValue;
+                            htmlLine = cleanValue; // Шапка
+                        } else {
+                            let labelText = row.label ? row.label.trim() : '';
+                            let suffix = (labelText && labelText !== 'Накануне') ? ':' : '';
+                            let prefixText = labelText ? `${labelText}${suffix} ` : '';
+                            
+                            textLine = prefixText + cleanValue;
+                            // Для HTML-буфера превращаем все внутренние переносы в <br>
+                            htmlLine = prefixText + cleanValue.replace(/\n/g, '<br>');
+                        }
+                        
+                        finalLinesText.push(textLine);
+                        finalLinesHTML.push(htmlLine);
+                    });
+
+                    let plainText = finalLinesText.join('\n');
+                    // ГЛАВНАЯ МАГИЯ: Склеиваем вопросы тегом <br>, чтобы ВКонтакте не делал абзацы
+                    let htmlText = finalLinesHTML.join('<br>'); 
+
+                    // Перехватываем системное событие копирования браузера
+                    const listener = function(e) {
+                        e.preventDefault();
+                        e.clipboardData.setData('text/html', htmlText);
+                        e.clipboardData.setData('text/plain', plainText);
+                    };
+                    
+                    document.addEventListener('copy', listener);
+                    
+                    // Создаем временное поле для триггера команды копирования
+                    let tempArea = document.createElement('textarea');
+                    tempArea.value = plainText;
+                    document.body.appendChild(tempArea);
+                    tempArea.select();
+                    
+                    // Выполняем копирование (тут срабатывает наш перехватчик)
+                    document.execCommand('copy');
+                    
+                    // Убираем мусор
+                    document.body.removeChild(tempArea);
+                    document.removeEventListener('copy', listener);
+
+                    // Меняем текст кнопки
+                    this.copyBtnText = "СКОПИРОВАНО!";
+                    setTimeout(() => { this.copyBtnText = "СКОПИРОВАТЬ РЕЗУЛЬТАТ"; }, 1500);
+                },
+
+                exportData() {
+                    let data = localStorage.getItem('pso_universal_app_v4');
+                    let safeName = this.callName ? this.callName.replace(/[^a-zа-яё0-9]/gi, '_') : 'pso_backup';
+                    let blob = new Blob([data], {type: "application/json"});
+                    let url = URL.createObjectURL(blob);
+                    let link = document.createElement('a');
+                    link.href = url;
+                    link.download = safeName + ".json";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+
+                // ВОССТАНОВЛЕННАЯ ФУНКЦИЯ ЗАГРУЗКИ ДАННЫХ ИЗ JSON
+                importData(event) {
+                    let file = event.target.files[0];
+                    if (!file) return;
+                    let reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            let data = JSON.parse(e.target.result);
+                            if (confirm("Заменить текущие данные загруженными?")) {
+                                localStorage.setItem('pso_universal_app_v4', JSON.stringify(data));
+                                location.reload();
+                            }
+                        } catch (err) {
+                            alert("Ошибка при чтении файла!");
+                        }
+                    };
+                    reader.readAsText(file);
+                    event.target.value = ""; 
                 }
-            } catch(e) { console.error("Ошибка отрисовки", e); }
-        }
-        var status = document.getElementById('save-status');
-        if (status) {
-            var now = new Date();
-            var timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-            status.innerText = "Обновлено в " + timeStr;
-        }
-    }
-
-    /**
-     * Слушатель postMessage.
-     */
-    window.addEventListener('message', function(event) {
-        if (event.data.type === 'survey_update') {
-            localStorage.setItem('survey_text_' + event.data.source, JSON.stringify(event.data.payload));
-            if (event.data.source === currentSource) updateFinalOutput();
-        }
-
-        if (event.data.type === 'sync_scroll') {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(function() {
-                var targetId = 'row-' + event.data.source + '-' + event.data.index;
-                var targetRow = document.getElementById(targetId);
-                var outputBox = document.getElementById('output');
-                if (targetRow && outputBox) {
-                    document.querySelectorAll('.res-row').forEach(function(r) { r.classList.remove('active-focus'); });
-                    targetRow.classList.add('active-focus');
-                    var scrollTarget = targetRow.offsetTop - outputBox.offsetTop - (outputBox.clientHeight / 3);
-                    outputBox.scrollTo({ top: scrollTarget, behavior: 'smooth' });
-                }
-            }, 100);
-        }
-
-        if (event.data.type === 'sync_globals') {
-            if (globalCallsignData !== event.data.value) {
-                globalCallsignData = event.data.value;
-                localStorage.setItem('pso_global_callsign_data', globalCallsignData);
-                updateFinalOutput(); 
             }
         }
-
-        if (event.data.type === 'sync_field') {
-            if (globalFields[event.data.fieldId] !== event.data.value) {
-                globalFields[event.data.fieldId] = event.data.value;
-                localStorage.setItem('pso_global_fields', JSON.stringify(globalFields));
-                broadcastData(globalCallsignData, globalFields);
-            }
-        }
-
-        if (event.data.type === 'set_height') {
-            var frame = document.getElementById('survey-frame');
-            if (frame && event.data.height) {
-                frame.style.height = event.data.height + 'px';
-                adjustFrameOffset();
-            }
-        }
-    });
-
-    /**
-     * Копирование.
-     */
-    function copyText() {
-        var out = document.getElementById('output');
-        if (!out || out.innerText.indexOf('Результат опроса') === 0) return;
-
-        var finalString = "";
-        var elements = out.childNodes;
-        elements.forEach(function(node) {
-            if (node.nodeType === 1) { 
-                var tempNode = node.cloneNode(true);
-                var labels = tempNode.querySelectorAll('.res-label');
-                labels.forEach(function(l) { l.style.textTransform = 'none'; });
-                finalString += tempNode.innerText.trim() + "\n";
-            }
-        });
-
-        var tempArea = document.createElement('textarea');
-        tempArea.value = finalString.trim();
-        document.body.appendChild(tempArea);
-        tempArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempArea);
-
-        var btn = document.getElementById('copy-btn');
-        if (btn) {
-            var oldContent = btn.innerHTML;
-            btn.innerHTML = "<span>СКОПИРОВАНО!</span>";
-            btn.style.backgroundColor = "#00c853";
-            setTimeout(function() { 
-                btn.innerHTML = oldContent; 
-                btn.style.backgroundColor = "#1976d2"; 
-            }, 1200);
-        }
-    }
-
-    /**
-     * Инициализация.
-     */
-    window.onload = function() {
-        var savedZ = localStorage.getItem('pso_z_main') || "";
-        globalZData = savedZ;
-        var zTextarea = document.getElementById('z_text');
-        zTextarea.value = savedZ;
-
-        if (savedZ.trim() === "") { 
-            editZ(); 
-        } else { 
-            renderZ(savedZ); 
-        }
-
-        if (zTextarea) {
-            const ro = new ResizeObserver(function() {
-                adjustFrameOffset();
-            });
-            ro.observe(zTextarea);
-        }
-
-        var pinnedSetting = localStorage.getItem('pso_header_pinned');
-        var pinBtn = document.getElementById('master-pin-btn');
-        var stickyHeader = document.getElementById('master-sticky');
-
-        if (pinnedSetting !== null && pinBtn && stickyHeader) {
-            var isPinned = (pinnedSetting === 'true');
-            pinBtn.classList.toggle('active', isPinned);
-            stickyHeader.classList.toggle('unpinned', !isPinned);
-        }
-
-        var savedCall = localStorage.getItem('pso_global_callsign_data');
-        if (savedCall === null) { 
-            var now = new Date();
-            var dateStr = now.toLocaleDateString('ru-RU');
-            var timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-            savedCall = dateStr + " " + timeStr + "\n";
-            localStorage.setItem('pso_global_callsign_data', savedCall);
-        }
-        globalCallsignData = savedCall;
-
-        var lastFile = localStorage.getItem('last_survey_file') || 'short.html';
-        var buttons = document.querySelectorAll('.nav-btn');
-        var found = false;
-        buttons.forEach(function(btn) {
-            if (btn.getAttribute('onclick') && btn.getAttribute('onclick').indexOf(lastFile) !== -1) {
-                openSurvey(lastFile, btn);
-                found = true;
-            }
-        });
-        if(!found && buttons.length > 0) openSurvey('short.html', buttons[0]);
-
-        updateFinalOutput();
-        setTimeout(adjustFrameOffset, 150);
-
-        // Убираем лоадер после завершения всей логики загрузки
-        setTimeout(() => toggleLoader(false), 500);
-    };
-
-    window.addEventListener('resize', adjustFrameOffset);
-
-    function exportToJson() {
-        try {
-            var backup = {};
-            var keys = Object.keys(localStorage);
-            for (var i = 0; i < keys.length; i++) {
-                var k = keys[i];
-                if (k && (k.indexOf('survey_') === 0 || k.indexOf('pso_') === 0 || k === 'last_survey_file' || k === 'pso_last_gender')) {
-                    backup[k] = localStorage.getItem(k);
-                }
-            }
-            var callsign = localStorage.getItem('pso_global_callsign_data');
-            var rawString = String(callsign || "pso_backup");
-            var firstLine = String(rawString.split('\n')[0]);
-            var safeName = firstLine.trim().replace(/[:.\/\\?%*|"<>]/g, '-').replace(/\s+/g, '_');
-            if (!safeName) safeName = "pso_backup";
-
-            var dataStr = JSON.stringify(backup, null, 2);
-            var blob = new Blob([dataStr], {type: "application/json"});
-            var url = URL.createObjectURL(blob);
-            var link = document.createElement('a');
-            link.href = url;
-            link.download = safeName + ".json";
-            document.body.appendChild(link);
-            link.click();
-            setTimeout(function() { document.body.removeChild(link); window.URL.revokeObjectURL(url); }, 100);
-        } catch (e) { alert("Ошибка при сохранении: " + e.message); }
-    }
-
-    function importFromJson(el) {
-        if (!el || !el.files || el.files.length === 0) return;
-        var fileToLoad = el.files[0]; 
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                var data = JSON.parse(e.target.result);
-                if (confirm("Заменить данные?")) {
-                    localStorage.clear();
-                    for (var key in data) { localStorage.setItem(key, data[key]); }
-                    location.reload();
-                }
-            } catch (err) { alert("Ошибка файла"); }
-        };
-        reader.readAsText(fileToLoad);
-        el.value = "";
-    }
-
-    window.addEventListener("drop", function(e) {
-        e.preventDefault();
-        var files = e.dataTransfer.files;
-        if (files.length > 0) importFromJson({ files: files });
-    }, false);
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('sw.js').then(function(reg) {
-                console.log('ServiceWorker готов!', reg.scope);
-            }).catch(function(err) {
-                console.log('Ошибка SW:', err);
-            });
-        });
-    }
-</script>
+    </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
